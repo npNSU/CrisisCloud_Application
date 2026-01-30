@@ -43,5 +43,5 @@ def get_locations():
 
 @app.get("/")
 def read_root():
-    return {"message": "Welcome to the CrisisCloud APPI!"}
+    return {"message": "Welcome to the CrisisCloud API!"}
 
