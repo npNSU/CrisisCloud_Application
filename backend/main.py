@@ -45,4 +45,3 @@ def get_locations():
 def read_root():
     return {"message": "Welcome to the CrisisCloud APPI!"}
 
-//This Kanaya
