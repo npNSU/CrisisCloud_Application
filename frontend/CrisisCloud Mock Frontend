@@ -1,0 +1,752 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CrisisCloud</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <!-- Leaflet (map library) -->
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <style>
+    body{
+      margin:0;
+      font-family: Arial, sans-serif;
+      background:#0b1220;
+      color:#e5e7eb;
+    }
+    header{
+      background:#101a2e;
+      padding:16px;
+      border-bottom:1px solid #1f2a44;
+      position:sticky; top:0; z-index:10;
+    }
+    .row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      flex-wrap:wrap;
+      gap:10px;
+    }
+    h1{ margin:0; font-size:22px; }
+    h2{ margin:0 0 8px; font-size:16px; }
+    h3{ margin:0 0 8px; font-size:14px; }
+    p{ margin:6px 0 0; color:#cbd5e1; line-height:1.35; }
+
+    button, select, input{
+      padding:10px 14px;
+      border-radius:10px;
+      border:1px solid #1f2a44;
+      background:#0b1220;
+      color:#e5e7eb;
+      cursor:pointer;
+      font-weight:600;
+    }
+    button.primary{
+      background:#60a5fa;
+      border:none;
+      color:#081023;
+    }
+    button.ghost{
+      background:#1f2a44;
+      border:none;
+      color:#e5e7eb;
+    }
+    button.danger{
+      background:#fb7185;
+      border:none;
+      color:#081023;
+    }
+
+    main{
+      padding:20px;
+      max-width:1100px;
+      margin:auto;
+    }
+    .grid{
+      display:grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap:14px;
+    }
+    @media (max-width: 980px){ .grid{ grid-template-columns:1fr; } }
+
+    .card{
+      background:#101a2e;
+      border:1px solid #1f2a44;
+      border-radius:14px;
+      padding:16px;
+    }
+
+    /* MAP */
+    #map{
+      width:100%;
+      height:420px;
+      border-radius:14px;
+      border:1px solid #1f2a44;
+      overflow:hidden;
+      margin-top:12px;
+      position: relative;
+      z-index: 1; /* keep map under modals */
+    }
+    .toolbar{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:10px;
+      align-items:center;
+    }
+    .small{
+      font-size:12px;
+      color:#94a3b8;
+      margin-top:10px;
+    }
+
+    /* Legend (Key) */
+    .legend{
+      display:flex;
+      gap:14px;
+      flex-wrap:wrap;
+      align-items:center;
+      margin-top:10px;
+      padding:10px 12px;
+      border:1px solid #1f2a44;
+      border-radius:12px;
+      background:#0b1220;
+      color:#cbd5e1;
+      font-size:13px;
+    }
+    .legendItem{
+      display:flex;
+      align-items:center;
+      gap:8px;
+    }
+    .legendEmoji{
+      font-size:18px;
+      line-height:18px;
+    }
+
+    /* Weather buttons */
+    .weatherTitle{
+      margin-top:12px;
+      font-size:13px;
+      color:#cbd5e1;
+      font-weight:700;
+    }
+    .weatherButtons{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+      margin-top:8px;
+      align-items:center;
+    }
+    .weatherBtn{
+      background:rgba(16,26,46,.55);
+      border:1px solid #1f2a44;
+      border-radius:999px;
+      padding:9px 12px;
+    }
+
+    /* Make Leaflet controls fit dark UI a bit nicer */
+    .leaflet-control-attribution, .leaflet-control-scale{
+      background:rgba(16,26,46,.85) !important;
+      color:#cbd5e1 !important;
+      border:1px solid #1f2a44 !important;
+      border-radius:10px !important;
+      padding:4px 8px !important;
+    }
+    .leaflet-control-attribution a{ color:#93c5fd !important; }
+
+    /* ===== Modal (Login) ===== */
+    .backdrop{
+      position:fixed;
+      inset:0;
+      background:rgba(0,0,0,0.80);
+      display:none;
+      align-items:center;
+      justify-content:center;
+      z-index:9999; /* ensure ALWAYS above map */
+      padding:20px;
+    }
+    .modal{
+      width:min(520px, 95vw);
+      background:#101a2e;
+      border:1px solid #1f2a44;
+      border-radius:14px;
+      padding:14px;
+      position: relative;
+      z-index:10000;
+    }
+    .modalHeader{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:10px;
+    }
+    .two{
+      display:grid;
+      grid-template-columns:1fr 1fr;
+      gap:10px;
+    }
+    @media (max-width:520px){ .two{ grid-template-columns:1fr; } }
+    .label{
+      font-size:12px;
+      color:#94a3b8;
+      margin:10px 0 6px;
+    }
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 10px;
+      border:1px solid #1f2a44;
+      border-radius:999px;
+      background:#0b1220;
+      color:#cbd5e1;
+      font-size:12px;
+      margin-top:10px;
+    }
+    .mutedBox{
+      margin-top:10px;
+      padding:10px 12px;
+      border:1px solid #1f2a44;
+      border-radius:12px;
+      background:#0b1220;
+      color:#cbd5e1;
+      font-size:13px;
+      line-height:1.35;
+    }
+
+    /* Disable map clicking/scrolling when modal open */
+    body.modal-open #map{
+      pointer-events:none;
+      filter: blur(2px);
+      opacity: 0.6;
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="row">
+    <h1>☁️ CrisisCloud</h1>
+    <div class="row">
+      <button class="ghost" id="btnAskLocation">Share Location</button>
+      <button class="ghost" id="btnHamptonRoads">Center on Hampton Roads</button>
+      <button class="ghost" id="btnSettings">Settings</button>
+      <button class="ghost" id="btnLogin">Org Login</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+
+    <!-- Public Dashboard + Map -->
+    <section class="card">
+      <h2>Public Dashboard</h2>
+      <p>
+        Anyone can view live updates. Storm shelters and food banks log in to post capacity and inventory changes.
+      </p>
+
+      <!-- KEY / LEGEND -->
+      <div class="legend" aria-label="Map key">
+        <div class="legendItem">
+          <span class="legendEmoji">🏠</span>
+          <span>Storm Shelter</span>
+        </div>
+        <div class="legendItem">
+          <span class="legendEmoji">🥫</span>
+          <span>Food Bank</span>
+        </div>
+        <div class="legendItem">
+          <span class="legendEmoji">📍</span>
+          <span>Incident Report (demo)</span>
+        </div>
+      </div>
+
+      <!-- Weather incident buttons -->
+      <div class="weatherTitle">Incident Reports (Demo)</div>
+      <div class="weatherButtons">
+        <button class="weatherBtn" id="btnFlood">🌊 Flooding</button>
+        <button class="weatherBtn" id="btnHurricane">🌀 Hurricane</button>
+        <button class="weatherBtn" id="btnStorm">⛈️ Severe Storm</button>
+        <button class="weatherBtn" id="btnTornado">🌪️ Tornado</button>
+        <button class="weatherBtn" id="btnWinter">❄️ Winter Weather</button>
+        <button class="weatherBtn" id="btnHeat">🔥 Extreme Heat</button>
+        <button class="weatherBtn" id="btnClearIncidents">Clear Incidents</button>
+      </div>
+
+      <div class="toolbar">
+        <select id="filterType" title="Filter">
+          <option value="all">Show: All</option>
+          <option value="shelter">Show: Storm Shelters</option>
+          <option value="food">Show: Food Banks</option>
+        </select>
+        <input id="search" placeholder="Search by name or city…" />
+        <button class="primary" id="btnRefresh">Refresh</button>
+      </div>
+
+      <div id="map"></div>
+      <div class="small" id="locStatus">Location: not shared • Map centered on Hampton Roads</div>
+      <div class="small" id="incidentStatus">Incidents: none</div>
+    </section>
+
+    <!-- Organization Portal -->
+    <aside class="card">
+      <h2>Organization Portal</h2>
+      <p>
+        For storm shelters and food banks only. Log in to post real-time updates.
+      </p>
+
+      <div class="toolbar">
+        <button class="primary" id="btnOpenLogin">Log in as Shelter / Food Bank</button>
+      </div>
+
+      <div class="small">Demo login is pre-filled for faster presentation.</div>
+
+      <!-- Logged-in panel -->
+      <div id="orgPanel" style="display:none; margin-top:14px;">
+        <div class="row" style="justify-content:space-between; align-items:flex-start;">
+          <div>
+            <h3 id="orgName">—</h3>
+            <div class="small" id="orgMeta">—</div>
+          </div>
+          <button class="danger" id="btnLogout">Log out</button>
+        </div>
+
+        <div class="mutedBox" id="orgControls"></div>
+
+        <div class="toolbar">
+          <button class="primary" id="btnSaveOrgUpdate">Save Update</button>
+          <button class="ghost" id="btnRecenterOrg">Center on my organization</button>
+        </div>
+
+        <div class="small" id="orgSaveHint">Saving updates will immediately reflect on the public map popups.</div>
+      </div>
+
+      <p class="small" style="margin-top:10px">
+        Public users do not need to log in.
+      </p>
+    </aside>
+
+  </div>
+</main>
+
+<!-- ===== Login Modal ===== -->
+<div class="backdrop" id="loginBackdrop" aria-hidden="true">
+  <div class="modal">
+    <div class="modalHeader">
+      <h2 style="margin:0;">Organization Login</h2>
+      <button class="ghost" id="btnCloseLogin">Close</button>
+    </div>
+
+    <p class="small" style="margin-top:0;">
+      Demo credentials are already filled in.
+    </p>
+
+    <div class="two">
+      <div>
+        <div class="label">Organization Type</div>
+        <select id="loginType">
+          <option value="shelter">Storm Shelter</option>
+          <option value="food">Food Bank</option>
+        </select>
+      </div>
+      <div>
+        <div class="label">Organization</div>
+        <select id="loginOrg"></select>
+      </div>
+    </div>
+
+    <div class="two" style="margin-top:10px;">
+      <div>
+        <div class="label">Username</div>
+        <input id="loginUser" value="demo_org" />
+      </div>
+      <div>
+        <div class="label">Password</div>
+        <input id="loginPass" type="password" value="crisiscloud" />
+      </div>
+    </div>
+
+    <div class="toolbar" style="margin-top:12px;">
+      <button class="primary" id="btnDoLogin">Log in</button>
+      <span class="pill">Demo: user <b>demo_org</b> • pass <b>crisiscloud</b></span>
+    </div>
+  </div>
+</div>
+
+<!-- Leaflet JS -->
+<script
+  src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+  integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+  crossorigin=""
+></script>
+
+<script>
+  const demoOrgs = [
+    { id:"sh1", type:"shelter", name:"Hampton Community Shelter", city:"Hampton, VA", lat:37.0299, lon:-76.3452, status:"open", spaceLeft: 45 },
+    { id:"sh2", type:"shelter", name:"Norfolk Emergency Shelter", city:"Norfolk, VA", lat:36.8508, lon:-76.2859, status:"limited", spaceLeft: 18 },
+    { id:"sh3", type:"shelter", name:"Portsmouth Safe Haven", city:"Portsmouth, VA", lat:36.8354, lon:-76.2983, status:"open", spaceLeft: 62 },
+    { id:"fb1", type:"food", name:"Peninsula Food Bank", city:"Newport News, VA", lat:37.0871, lon:-76.4730, status:"open", foodLeft: 340 },
+    { id:"fb2", type:"food", name:"Southside Pantry", city:"Virginia Beach, VA", lat:36.8529, lon:-75.9780, status:"limited", foodLeft: 95 }
+  ];
+
+  const HAMPTON_ROADS_CENTER = { lat: 36.9, lon: -76.3 };
+
+  let userLocation = null;
+  let markersLayer = null;
+  let incidentsLayer = null;
+  let userMarker = null;
+  let loggedInOrgId = null;
+
+  const map = L.map("map", { zoomControl: true })
+    .setView([HAMPTON_ROADS_CENTER.lat, HAMPTON_ROADS_CENTER.lon], 10);
+
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    maxZoom: 19,
+    attribution: '&copy; OpenStreetMap contributors'
+  }).addTo(map);
+
+  markersLayer = L.layerGroup().addTo(map);
+  incidentsLayer = L.layerGroup().addTo(map);
+
+  // Emoji icons
+  function emojiIcon(type){
+    const emoji = type === "shelter" ? "🏠" : "🥫";
+    return L.divIcon({
+      html: `<div style="font-size:28px; line-height:28px; text-align:center;">${emoji}</div>`,
+      className: "",
+      iconSize: [30, 30],
+      iconAnchor: [15, 15]
+    });
+  }
+
+  function incidentIcon(emoji){
+    return L.divIcon({
+      html: `<div style="font-size:26px; line-height:26px; text-align:center;">${emoji}</div>`,
+      className: "",
+      iconSize: [28, 28],
+      iconAnchor: [14, 14]
+    });
+  }
+
+  function statusLabel(s){
+    if(s === "open") return "Open";
+    if(s === "limited") return "Limited";
+    if(s === "full") return "Full / Out";
+    return "—";
+  }
+
+  function popupDetails(o){
+    if(o.type === "shelter"){
+      return `<div><b>Space left:</b> ${typeof o.spaceLeft === "number" ? o.spaceLeft : "—"}</div>`;
+    }
+    return `<div><b>Food left:</b> ${typeof o.foodLeft === "number" ? o.foodLeft : "—"}</div>`;
+  }
+
+  function clearMarkers(){ markersLayer.clearLayers(); }
+
+  function renderMarkers(){
+    clearMarkers();
+
+    const filterType = document.getElementById("filterType").value;
+    const q = document.getElementById("search").value.trim().toLowerCase();
+
+    const filtered = demoOrgs.filter(o => {
+      if(filterType !== "all" && o.type !== filterType) return false;
+      if(q){
+        const hay = (o.name + " " + o.city).toLowerCase();
+        if(!hay.includes(q)) return false;
+      }
+      return true;
+    });
+
+    filtered.forEach(o => {
+      const m = L.marker([o.lat, o.lon], { icon: emojiIcon(o.type) }).addTo(markersLayer);
+      const popupHtml = `
+        <div style="font-family:Arial; min-width:240px">
+          <div style="font-weight:800; margin-bottom:4px">
+            ${o.type === "shelter" ? "🏠" : "🥫"} ${o.name}
+          </div>
+          <div style="color:#334155; margin-bottom:6px">${o.city}</div>
+          <div><b>Type:</b> ${o.type === "shelter" ? "Storm Shelter" : "Food Bank"}</div>
+          <div><b>Status:</b> ${statusLabel(o.status)}</div>
+          ${popupDetails(o)}
+        </div>
+      `;
+      m.bindPopup(popupHtml);
+    });
+
+    if(filtered.length > 0){
+      const bounds = L.latLngBounds(filtered.map(o => [o.lat, o.lon]));
+      map.fitBounds(bounds.pad(0.25));
+    }
+  }
+
+  function setLocStatus(text){
+    document.getElementById("locStatus").textContent = text;
+  }
+
+  // ===== Incident demo logic =====
+  const weatherIncidents = {
+    flood: ["🌊","🚧","🛑","🏊","💧","🛶","⚠️","🧯"],
+    hurricane: ["🌀","🌧️","💨","⛑️","⚠️","🌴","🔦","📢"],
+    storm: ["⛈️","🌩️","⚡","🌧️","💨","🚧","⚠️","📢"],
+    tornado: ["🌪️","🚨","⚠️","🧱","🔦","📢","🏚️","⛑️"],
+    winter: ["❄️","🧊","🚗","⚠️","🌨️","🧤","🧣","🚧"],
+    heat: ["🔥","🥵","💧","🧊","🚰","⛱️","⚠️","🏥"]
+  };
+
+  function randomInt(min, max){
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+  }
+
+  function pickUnique(arr, n){
+    const copy = [...arr];
+    const picked = [];
+    while(picked.length < n && copy.length){
+      const idx = Math.floor(Math.random() * copy.length);
+      picked.push(copy.splice(idx, 1)[0]);
+    }
+    return picked;
+  }
+
+  function clearIncidents(){
+    incidentsLayer.clearLayers();
+    document.getElementById("incidentStatus").textContent = "Incidents: none";
+  }
+
+  function showIncidents(typeKey, label){
+    incidentsLayer.clearLayers();
+
+    const chosen = pickUnique(weatherIncidents[typeKey], 4);
+
+    // Drop 4 random incident markers around Hampton Roads (demo spread)
+    const baseLat = HAMPTON_ROADS_CENTER.lat;
+    const baseLon = HAMPTON_ROADS_CENTER.lon;
+
+    chosen.forEach((emoji) => {
+      const latJitter = (Math.random() - 0.5) * 0.25; // ~ within region
+      const lonJitter = (Math.random() - 0.5) * 0.35;
+
+      const lat = baseLat + latJitter;
+      const lon = baseLon + lonJitter;
+
+      const m = L.marker([lat, lon], { icon: incidentIcon(emoji) }).addTo(incidentsLayer);
+      m.bindPopup(`
+        <div style="font-family:Arial; min-width:200px">
+          <div style="font-weight:800; margin-bottom:6px;">📍 Reported Incident</div>
+          <div><b>Category:</b> ${label}</div>
+          <div><b>Marker:</b> ${emoji}</div>
+          <div style="color:#334155; margin-top:6px;">Demo: represents a community report.</div>
+        </div>
+      `);
+    });
+
+    document.getElementById("incidentStatus").textContent =
+      `Incidents: showing 4 demo reports for ${label}`;
+
+    // Fit bounds to include incidents + orgs if possible
+    const allLatLng = [];
+    demoOrgs.forEach(o => allLatLng.push([o.lat, o.lon]));
+    incidentsLayer.eachLayer(layer => {
+      if(layer.getLatLng) {
+        const ll = layer.getLatLng();
+        allLatLng.push([ll.lat, ll.lng]);
+      }
+    });
+
+    if(allLatLng.length){
+      const bounds = L.latLngBounds(allLatLng);
+      map.fitBounds(bounds.pad(0.25));
+    }
+  }
+
+  // Location
+  function askForLocation(){
+    if(!navigator.geolocation){
+      alert("Geolocation not supported in this browser.");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        userLocation = { lat: pos.coords.latitude, lon: pos.coords.longitude };
+        map.setView([userLocation.lat, userLocation.lon], 12);
+
+        if(userMarker) map.removeLayer(userMarker);
+
+        userMarker = L.circleMarker([userLocation.lat, userLocation.lon], {
+          radius: 8, weight: 2, opacity: 1, fillOpacity: 0.4
+        }).addTo(map).bindPopup("You are here");
+
+        userMarker.openPopup();
+        setLocStatus("Location: shared • Centered on you");
+      },
+      () => alert("Location not shared."),
+      { enableHighAccuracy:true, timeout:8000 }
+    );
+  }
+
+  function centerOnHamptonRoads(){
+    map.setView([HAMPTON_ROADS_CENTER.lat, HAMPTON_ROADS_CENTER.lon], 10);
+    setLocStatus("Location: not shared • Map centered on Hampton Roads");
+  }
+
+  // ===== Modal open/close =====
+  const loginBackdrop = document.getElementById("loginBackdrop");
+
+  function openLogin(){
+    document.body.classList.add("modal-open");
+    loginBackdrop.style.display = "flex";
+    loginBackdrop.setAttribute("aria-hidden","false");
+    populateLoginOrgs();
+  }
+  function closeLogin(){
+    loginBackdrop.style.display = "none";
+    loginBackdrop.setAttribute("aria-hidden","true");
+    document.body.classList.remove("modal-open");
+  }
+
+  function populateLoginOrgs(){
+    const type = document.getElementById("loginType").value;
+    const sel = document.getElementById("loginOrg");
+    sel.innerHTML = "";
+    demoOrgs.filter(o => o.type === type).forEach(o => {
+      const opt = document.createElement("option");
+      opt.value = o.id;
+      opt.textContent = o.name;
+      sel.appendChild(opt);
+    });
+  }
+
+  function doLogin(){
+    const user = document.getElementById("loginUser").value.trim();
+    const pass = document.getElementById("loginPass").value.trim();
+    if(user !== "demo_org" || pass !== "crisiscloud"){
+      alert("Demo login failed. Use username: demo_org and password: crisiscloud");
+      return;
+    }
+
+    loggedInOrgId = document.getElementById("loginOrg").value;
+    const org = demoOrgs.find(o => o.id === loggedInOrgId);
+    if(!org){ alert("Organization not found."); return; }
+
+    document.getElementById("orgPanel").style.display = "block";
+    document.getElementById("orgName").textContent = org.name;
+    document.getElementById("orgMeta").textContent =
+      (org.type === "shelter" ? "🏠 Storm Shelter" : "🥫 Food Bank") + " • " + org.city;
+
+    const controls = document.getElementById("orgControls");
+
+    if(org.type === "shelter"){
+      controls.innerHTML = `
+        <div style="font-weight:800; margin-bottom:6px;">Shelter Update</div>
+        <div style="margin-bottom:8px;">Change how much <b>space is left</b> in your shelter.</div>
+
+        <div class="label">Space left (people)</div>
+        <input id="inputSpaceLeft" type="number" min="0" value="${typeof org.spaceLeft === "number" ? org.spaceLeft : 0}" />
+
+        <div class="label">Status</div>
+        <select id="inputStatus">
+          <option value="open" ${org.status==="open" ? "selected" : ""}>Open</option>
+          <option value="limited" ${org.status==="limited" ? "selected" : ""}>Limited</option>
+          <option value="full" ${org.status==="full" ? "selected" : ""}>Full</option>
+        </select>
+        <div class="small">This is a demo: clicking Save will update the public map popup.</div>
+      `;
+    } else {
+      controls.innerHTML = `
+        <div style="font-weight:800; margin-bottom:6px;">Food Bank Info</div>
+        <div style="margin-bottom:8px;">Current estimate of <b>food left</b> for the public.</div>
+
+        <div class="pill" style="margin-top:0;">
+          🥫 Food left: <b style="margin-left:6px;">${typeof org.foodLeft === "number" ? org.foodLeft : "—"}</b>
+        </div>
+
+        <div class="label" style="margin-top:12px;">Status</div>
+        <select id="inputStatus">
+          <option value="open" ${org.status==="open" ? "selected" : ""}>Open</option>
+          <option value="limited" ${org.status==="limited" ? "selected" : ""}>Limited</option>
+          <option value="full" ${org.status==="full" ? "selected" : ""}>Out</option>
+        </select>
+        <div class="small">For this mock, food banks display food left (no edit). Status can still be changed.</div>
+      `;
+    }
+
+    closeLogin();
+  }
+
+  function logout(){
+    loggedInOrgId = null;
+    document.getElementById("orgPanel").style.display = "none";
+    alert("Logged out.");
+  }
+
+  function saveOrgUpdate(){
+    if(!loggedInOrgId){ alert("Please log in first."); return; }
+    const org = demoOrgs.find(o => o.id === loggedInOrgId);
+    if(!org){ alert("Organization not found."); return; }
+
+    const statusEl = document.getElementById("inputStatus");
+    if(statusEl) org.status = statusEl.value;
+
+    if(org.type === "shelter"){
+      const spaceEl = document.getElementById("inputSpaceLeft");
+      const newVal = parseInt(spaceEl.value || "0", 10);
+      org.spaceLeft = Math.max(0, newVal);
+    }
+
+    renderMarkers();
+    alert("Update saved! Public map popups now show your latest info.");
+  }
+
+  function recenterOnOrg(){
+    if(!loggedInOrgId) return;
+    const org = demoOrgs.find(o => o.id === loggedInOrgId);
+    if(!org) return;
+    map.setView([org.lat, org.lon], 13);
+  }
+
+  // Wire up
+  document.getElementById("btnAskLocation").addEventListener("click", askForLocation);
+  document.getElementById("btnHamptonRoads").addEventListener("click", centerOnHamptonRoads);
+
+  document.getElementById("btnRefresh").addEventListener("click", renderMarkers);
+  document.getElementById("filterType").addEventListener("change", renderMarkers);
+  document.getElementById("search").addEventListener("input", renderMarkers);
+
+  document.getElementById("btnLogin").addEventListener("click", openLogin);
+  document.getElementById("btnOpenLogin").addEventListener("click", openLogin);
+  document.getElementById("btnCloseLogin").addEventListener("click", closeLogin);
+  document.getElementById("loginBackdrop").addEventListener("click", (e)=>{ if(e.target === loginBackdrop) closeLogin(); });
+  document.getElementById("loginType").addEventListener("change", populateLoginOrgs);
+  document.getElementById("btnDoLogin").addEventListener("click", doLogin);
+
+  document.getElementById("btnLogout").addEventListener("click", logout);
+  document.getElementById("btnSaveOrgUpdate").addEventListener("click", saveOrgUpdate);
+  document.getElementById("btnRecenterOrg").addEventListener("click", recenterOnOrg);
+
+  // NEW: Weather incident buttons
+  document.getElementById("btnFlood").addEventListener("click", ()=> showIncidents("flood", "Flooding"));
+  document.getElementById("btnHurricane").addEventListener("click", ()=> showIncidents("hurricane", "Hurricane"));
+  document.getElementById("btnStorm").addEventListener("click", ()=> showIncidents("storm", "Severe Storm"));
+  document.getElementById("btnTornado").addEventListener("click", ()=> showIncidents("tornado", "Tornado"));
+  document.getElementById("btnWinter").addEventListener("click", ()=> showIncidents("winter", "Winter Weather"));
+  document.getElementById("btnHeat").addEventListener("click", ()=> showIncidents("heat", "Extreme Heat"));
+  document.getElementById("btnClearIncidents").addEventListener("click", clearIncidents);
+
+  // Init
+  populateLoginOrgs();
+  renderMarkers();
+  clearIncidents();
+</script>
+
+</body>
+</html>
