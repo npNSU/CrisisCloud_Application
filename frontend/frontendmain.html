@@ -1,49 +1,372 @@
-<!-- Theme: NSU Theme or Original Crisis Cloud Theme
-    //Login System:
-        //Username sign in 
-            //Give user option to make up username or use email
-        //Password 
-            //Reset Password 
-            //OR
-            //Recover password via phone number or username/email
-    
-    //Settings
-        //Permission Access Options
-            //Location: Ask user if they want to share location
-            //Notifications: Customize alerts,sounds, and vibration
-        
--->
 
-<!--This is a test-->
+<!--Login Screen Code-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My First Page</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CrisisCloud | Secure Access</title>
+    <style>
+        /* --- CSS THEME VARIABLES --- */
+        :root {
+            --bg-body: #0b1220;
+            --bg-card: #101a2e;
+            --bg-input: #0b1220;
+            --text-main: #ffffff;
+            --text-sub: #94a3b8;
+            --border-color: #1f2a44;
+            --accent: #60a5fa;
+            --accent-hover: #93c5fd;
+            --btn-text: #081023;
+        }
+
+        [data-theme="light"] {
+            --bg-body: #f0f2f5;
+            --bg-card: #ffffff;
+            --bg-input: #f9fafb;
+            --text-main: #1e293b;
+            --text-sub: #64748b;
+            --border-color: #e2e8f0;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --btn-text: #ffffff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+            transition: background 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: var(--bg-body);
+            color: var(--text-main);
+        }
+
+        /* Theme Switcher Styles */
+        .theme-container {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 0.8rem;
+            color: var(--text-sub);
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 40px;
+            height: 20px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 14px;
+            width: 14px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: var(--accent); }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* CrisisCloud Specific Styles */
+        .login-card {
+            background: var(--bg-card);
+            padding: 2.5rem;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 2rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .tab {
+            flex: 1;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            color: var(--text-sub);
+            font-weight: 600;
+        }
+
+        .tab.active {
+            color: var(--accent);
+            border-bottom: 2px solid var(--accent);
+        }
+
+        .form-section { display: none; }
+        .form-section.active { display: block; }
+
+        h2 {
+            text-align: center;
+            color: var(--text-main);
+            margin-bottom: 1.5rem;
+            font-size: 24px;
+        }
+
+        .input-group {
+            margin-bottom: 1.2rem;
+            position: relative;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.6rem;
+            color: var(--text-sub);
+            font-size: 0.85rem;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.8rem;
+            padding-right: 45px;
+            border: 1px solid var(--border-color);
+            background: var(--bg-input);
+            color: var(--text-main);
+            border-radius: 10px;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(96, 165, 250, 0.2);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 12px;
+            top: 38px;
+            cursor: pointer;
+            color: var(--text-sub);
+            z-index: 5;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 0.85rem;
+            border: none;
+            border-radius: 10px;
+            background: var(--accent);
+            color: var(--btn-text);
+            font-size: 1rem;
+            font-weight: 700;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        .btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-1px);
+        }
+
+        .gen-pass {
+            font-size: 0.75rem;
+            color: var(--accent);
+            cursor: pointer;
+            float: right;
+            font-weight: 600;
+        }
+
+        .options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 1rem;
+            font-size: 0.85rem;
+            color: var(--text-sub);
+        }
+
+        .options a { color: var(--accent); text-decoration: none; }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(4px);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            padding: 2rem;
+            border-radius: 14px;
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
 
-    <h1>Hello World!</h1>
-    <p>This is a test.</p>
+    <div class="theme-container">
+        <span>Light Mode</span>
+        <label class="switch">
+            <input type="checkbox" id="theme-toggle" checked>
+            <span class="slider"></span>
+        </label>
+    </div>
 
+    <div class="login-card">
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('login-form')">Login</div>
+            <div class="tab" onclick="switchTab('signup-form')">Register</div>
+        </div>
+
+        <div id="login-form" class="form-section active">
+            <h2>☁️ CrisisCloud</h2>
+            <form onsubmit="return false;">
+                <div class="input-group">
+                    <label>Username or Email</label>
+                    <input type="text" placeholder="Username or email" id="loginUser">
+                </div>
+                
+                <div class="input-group">
+                    <label>Password</label>
+                    <div style="position: relative;">
+                        <input type="password" placeholder="••••••••" id="loginPass">
+                        <span class="toggle-password" onclick="toggleVisibility('loginPass')">👁️</span>
+                    </div>
+                </div>
+
+                <div class="options">
+                    <label style="display: flex; align-items: center; gap: 8px;">
+                        <input type="checkbox" style="width: auto;"> Remember
+                    </label>
+                    <a href="#" onclick="showRecovery()">Forgot Password?</a>
+                </div>
+
+                <button class="btn" onclick="alert('Accessing Dashboard...')">Access Dashboard</button>
+            </form>
+        </div>
+
+        <div id="signup-form" class="form-section">
+            <h2>Create Profile</h2>
+            <form onsubmit="return false;">
+                <div class="input-group">
+                    <label>Email or Username</label>
+                    <input type="text" placeholder="Create username or Use email account">
+                </div>
+                <div class="input-group">
+                    <span class="gen-pass" onclick="generatePass()">Suggest Secure Pass</span>
+                    <label>Password</label>
+                    <div style="position: relative;">
+                        <input type="password" id="new-pass" placeholder="••••••••">
+                        <span class="toggle-password" onclick="toggleVisibility('new-pass')">👁️</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>Verify Password</label>
+                    <div style="position: relative;">
+                        <input type="password" id="confirm-pass" oninput="validateMatch()" placeholder="Retype password">
+                        <span class="toggle-password" onclick="toggleVisibility('confirm-pass')">👁️</span>
+                    </div>
+                    <p id="match-error" style="color: #fb7185; font-size: 0.75rem; display: none; margin-top: 5px;">Passwords do not match!</p>
+                </div>
+                <button type="submit" id="reg-btn" class="btn">Register Organization</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="recoveryModal" class="modal-overlay">
+        <div class="modal-content">
+            <h3 style="color: var(--text-main);">Account Recovery</h3>
+            <p style="font-size: 0.85rem; color: var(--text-sub); margin: 15px 0;">How should we send your code?</p>
+            <div class="input-group" style="text-align: left;">
+                <label>Contact Info</label>
+                <input type="text" placeholder="Email or Phone">
+            </div>
+            <button class="btn">Send Email Link</button>
+            <button class="btn" style="background: var(--border-color); color: var(--text-main); margin-top: 8px;" onclick="closeRecovery()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        // --- THEME LOGIC ---
+        const themeToggle = document.getElementById('theme-toggle');
+        themeToggle.addEventListener('change', () => {
+            if (themeToggle.checked) {
+                document.documentElement.setAttribute('data-theme', 'dark');
+            } else {
+                document.documentElement.setAttribute('data-theme', 'light');
+            }
+        });
+
+        // --- PREVIOUS UTILITIES ---
+        function toggleVisibility(inputId) {
+            const input = document.getElementById(inputId);
+            input.type = input.type === "password" ? "text" : "password";
+        }
+
+        function switchTab(sectionId) {
+            document.querySelectorAll('.form-section').forEach(s => s.classList.remove('active'));
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.getElementById(sectionId).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        function generatePass() {
+            const pass = Math.random().toString(36).slice(-10) + "A1!";
+            document.getElementById('new-pass').value = pass;
+            document.getElementById('confirm-pass').value = pass;
+            validateMatch();
+        }
+
+        function validateMatch() {
+            const p1 = document.getElementById('new-pass').value;
+            const p2 = document.getElementById('confirm-pass').value;
+            const error = document.getElementById('match-error');
+            const btn = document.getElementById('reg-btn');
+            error.style.display = (p2 && p1 !== p2) ? 'block' : 'none';
+            btn.disabled = (p2 && p1 !== p2);
+            btn.style.opacity = (p2 && p1 !== p2) ? '0.4' : '1';
+        }
+
+        function showRecovery() { document.getElementById('recoveryModal').style.display = 'flex'; }
+        function closeRecovery() { document.getElementById('recoveryModal').style.display = 'none'; }
+    </script>
 </body>
 </html>
-
-<!--Login Screen Code-->
-<!--Username Log/Sigin Code-->
-    <!--Give user option to use email or create username code-->
-<!--Create Password-->
-    <!--Giver user for generated password code-->
-    <!--Incorrect Password code, retype-->
-    <!--Recover Password via phone number/email/username code-->
-    
 <!--Settings Screen Options Code-->
 <!--Location Option-->
     <!--Permission Access Option Code-->
 <!--Notifications-->
     <!--Alerts Code-->
-    <!--Regulate Sounds Code-->
+    <!--Sound Silder  Code-->
     <!--Vibration Code-->
-
 
 
