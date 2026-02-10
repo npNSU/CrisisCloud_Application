@@ -5,8 +5,8 @@ This version of the application does not use a database. All weather data is ret
 Prerequisites
 - Python 3.10 or higher
 - pip package manager
-Installing Dependencies
 
+Installing Dependencies:
 pip install flask requests python-dotenv
 Project Structure
 Make sure your files are organized like this:
@@ -15,29 +15,25 @@ CloudCrisis_Backend/
 ├── crisisCloudBackend.py
 └── templates/
 └── crisisCloud.html
-Setup Instructions
 
+Setup Instructions
 1. In the command prompt cd to the directory where you placed the crisisCloud_backend folder
 2. Run python crisisCloudBackend.py
 3. Open a web browser and navigate to:
 http://127.0.0.1:5000/
 
 Environment Variables (.env file)
-
 Create a file named .env in the same directory as crisisCloudBackend.py with the following content:
-
 NWS_USER_AGENT=CrisisCloud/1.0 (your-email@school.edu)
 
 This User-Agent is required by the National Weather Service.
 Do not place the .env file inside the templates folder.
+
 Testing the Weather API
-
 You can test the live weather endpoint directly in your browser:
-
 http://127.0.0.1:5000/api/weather/live?lat=36.9&lon=-76.3
 
 Common Issues
-
 TemplateNotFound Error:
 Ensure crisisCloud.html is inside the templates folder and the Flask route references the correct filename.
 
@@ -48,7 +44,6 @@ Confirm the frontend is calling /api/weather/live and not an old endpoint.
 Ensure the file is named exactly .env and restart Flask after editing.
 
 Notes for the Team
-
 - This application uses live data from the National Weather Service.
 - No database or caching layer is currently implemented.
 - Shelter and food bank markers are demo data in the frontend.
