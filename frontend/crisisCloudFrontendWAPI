@@ -1,0 +1,491 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>CrisisCloud</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  />
+  <style>
+    /* ===== THEME VARIABLES ===== */
+    :root {
+      --bg-body: #0b1220;
+      --bg-card: #101a2e;
+      --bg-input: #0b1220;
+      --border-color: #1f2a44;
+      --text-main: #e5e7eb;
+      --text-muted: #94a3b8;
+      --text-small: #cbd5e1;
+      --accent: #60a5fa;
+      --accent-hover: #93c5fd;
+      --btn-text: #081023;
+      --danger: #fb7185;
+    }
+
+    [data-theme="light"] {
+      --bg-body: #f1f5f9;
+      --bg-card: #ffffff;
+      --bg-input: #ffffff;
+      --border-color: #cbd5e1;
+      --text-main: #1e293b;
+      --text-muted: #475569;
+      --text-small: #334155;
+      --accent: #2563eb;
+      --accent-hover: #1d4ed8;
+      --btn-text: #ffffff;
+      --danger: #e11d48;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+      transition: background 0.3s, color 0.3s, border-color 0.3s;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg-body);
+      color: var(--text-main);
+    }
+
+    header {
+      background: var(--bg-card);
+      padding: 16px;
+      border-bottom: 1px solid var(--border-color);
+      position: sticky; top: 0; z-index: 10;
+    }
+
+    /* Theme Switcher Toggle */
+    .theme-switch-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .theme-switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 22px;
+    }
+    .theme-switch input { opacity: 0; width: 0; height: 0; }
+    .slider {
+      position: absolute;
+            cursor: pointer;
+            inset: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 20px;
+    }
+    .slider:before {
+      position: absolute;
+      content: "🌙";
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 16px;
+      width: 16px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    input:checked + .slider { background-color: var(--accent); }
+    input:checked + .slider:before {
+      transform: translateX(22px);
+      content: "☀️";
+    }
+
+    .row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    h1 { margin: 0; font-size: 22px; color: var(--text-main); }
+    h2 { margin: 0 0 8px; font-size: 16px; color: var(--text-main); }
+    h3 { margin: 0 0 8px; font-size: 14px; color: var(--text-main); }
+    p { margin: 6px 0 0; color: var(--text-small); line-height: 1.35; }
+
+    button, select, input {
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-input);
+      color: var(--text-main);
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.primary {
+      background: var(--accent);
+      border: none;
+      color: var(--btn-text);
+    }
+    button.ghost {
+      background: var(--border-color);
+      border: none;
+      color: var(--text-main);
+    }
+    button.danger {
+      background: var(--danger);
+      border: none;
+      color: #fff;
+    }
+
+    main {
+      padding: 20px;
+      max-width: 1100px;
+      margin: auto;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr .9fr;
+      gap: 14px;
+    }
+    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    #map {
+      width: 100%;
+      height: 420px;
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+      margin-top: 12px;
+      position: relative;
+      z-index: 1;
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-top: 10px;
+      align-items: center;
+    }
+    .small {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+
+    .legend {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+      margin-top: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--bg-input);
+      color: var(--text-small);
+      font-size: 13px;
+    }
+    .legendItem { display: flex; align-items: center; gap: 8px; }
+
+    .weatherTitle {
+      margin-top: 12px;
+      font-size: 13px;
+      color: var(--text-small);
+      font-weight: 700;
+    }
+    .weatherBtn {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      padding: 9px 12px;
+    }
+
+    .leaflet-control-attribution, .leaflet-control-scale {
+      background: var(--bg-card) !important;
+      color: var(--text-muted) !important;
+      border: 1px solid var(--border-color) !important;
+    }
+
+    .backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.80);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+      padding: 20px;
+    }
+    .modal {
+      width: min(520px, 95vw);
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: 14px;
+      padding: 14px;
+      position: relative;
+    }
+    .label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin: 10px 0 6px;
+    }
+    .mutedBox {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--bg-input);
+      color: var(--text-small);
+      font-size: 13px;
+    }
+    body.modal-open #map { filter: blur(2px); opacity: 0.6; }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="row">
+    <h1>☁️ CrisisCloud</h1>
+    <div class="row">
+      <div class="theme-switch-wrapper">
+        <label class="theme-switch" for="themeCheckbox">
+          <input type="checkbox" id="themeCheckbox">
+          <div class="slider"></div>
+        </label>
+      </div>
+      <button class="ghost" id="btnAskLocation">Share Location</button>
+      <button class="ghost" id="btnHamptonRoads">Center Map</button>
+      <button class="ghost" id="btnLogin">Org Login</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="grid">
+    <section class="card">
+      <h2>Public Dashboard</h2>
+      <p>Real-time shelter capacity and incident reports.</p>
+
+      <div class="legend">
+        <div class="legendItem"><span style="font-size:18px">🏠</span><span>Shelter</span></div>
+        <div class="legendItem"><span style="font-size:18px">🥫</span><span>Food Bank</span></div>
+        <div class="legendItem"><span style="font-size:18px">📍</span><span>Incident</span></div>
+      </div>
+
+      <div class="weatherButtons">
+        <button class="weatherBtn" id="btnFlood">🌊 Flood</button>
+        <button class="weatherBtn" id="btnHurricane">🌀 Hurricane</button>
+        <button class="weatherBtn" id="btnStorm">⛈️ Storm</button>
+        <button class="weatherBtn" id="btnClearIncidents">Clear</button>
+      </div>
+
+      <div class="toolbar">
+        <select id="filterType">
+          <option value="all">All Types</option>
+          <option value="shelter">Shelters</option>
+          <option value="food">Food Banks</option>
+        </select>
+        <input id="search" placeholder="Search city..." />
+        <button class="primary" id="btnRefresh">Refresh</button>
+      </div>
+
+      <div id="map"></div>
+      <div class="small" id="locStatus">Map centered on Hampton Roads</div>
+      <div class="small" id="incidentStatus">Incidents: none</div>
+      <div class="mutedBox" id="weatherBox">
+  Weather: —
+</div>
+
+<div class="mutedBox" id="alertsBox" style="margin-top:10px;">
+  Alerts: —
+</div>
+    </section>
+
+    <aside class="card">
+      <h2>Organization Portal</h2>
+      <div id="orgLoggedOut">
+        <p>Authorized personnel only.</p>
+        <button class="primary" style="margin-top:15px;" id="btnOpenLogin">Login to Update Status</button>
+      </div>
+
+      <div id="orgPanel" style="display:none; margin-top:14px;">
+        <div class="row">
+          <h3 id="orgName">—</h3>
+          <button class="danger" id="btnLogout">Log out</button>
+        </div>
+        <div class="mutedBox" id="orgControls"></div>
+        <button class="primary" id="btnSaveOrgUpdate" style="width:100%; margin-top:10px;">Save Update</button>
+      </div>
+    </aside>
+  </div>
+</main>
+
+<div class="backdrop" id="loginBackdrop">
+  <div class="modal">
+    <div class="row"><h2>Login</h2><button class="ghost" id="btnCloseLogin">X</button></div>
+    <div class="label">Organization</div>
+    <select id="loginOrg" style="width:100%"></select>
+    <div class="label">Password</div>
+    <input id="loginPass" type="password" value="crisiscloud" style="width:100%" />
+    <button class="primary" id="btnDoLogin" style="width:100%; margin-top:15px;">Access Account</button>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+  const demoOrgs = [
+    { id:"sh1", type:"shelter", name:"Hampton Community Shelter", city:"Hampton, VA", lat:37.0299, lon:-76.3452, status:"open", spaceLeft: 45 },
+    { id:"sh2", type:"shelter", name:"Norfolk Emergency Shelter", city:"Norfolk, VA", lat:36.8508, lon:-76.2859, status:"limited", spaceLeft: 18 },
+    { id:"fb1", type:"food", name:"Peninsula Food Bank", city:"Newport News, VA", lat:37.0871, lon:-76.4730, status:"open", foodLeft: 340 }
+  ];
+
+  // Theme Logic
+  const themeCheckbox = document.getElementById('themeCheckbox');
+  let mapTileLayer;
+
+  function updateMapTheme(isLight) {
+    if (mapTileLayer) map.removeLayer(mapTileLayer);
+    
+    const url = isLight 
+      ? "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+    
+    mapTileLayer = L.tileLayer(url, {
+      attribution: '&copy; CartoDB / OpenStreetMap'
+    }).addTo(map);
+  }
+
+  themeCheckbox.addEventListener('change', () => {
+    const isLight = themeCheckbox.checked;
+    document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+    updateMapTheme(isLight);
+    localStorage.setItem('crisisTheme', isLight ? 'light' : 'dark');
+  });
+
+  // Initial Theme Load
+  const savedTheme = localStorage.getItem('crisisTheme');
+  if (savedTheme === 'light') {
+    themeCheckbox.checked = true;
+    document.documentElement.setAttribute('data-theme', 'light');
+  }
+
+  // Map Init
+  const map = L.map("map").setView([36.9, -76.3], 10);
+  updateMapTheme(savedTheme === 'light');
+
+  const markersLayer = L.layerGroup().addTo(map);
+  const incidentsLayer = L.layerGroup().addTo(map);
+
+  function renderMarkers(){
+    markersLayer.clearLayers();
+    demoOrgs.forEach(o => {
+      const emoji = o.type === "shelter" ? "🏠" : "🥫";
+      const icon = L.divIcon({ html: `<div style="font-size:24px;">${emoji}</div>`, className: "" });
+      L.marker([o.lat, o.lon], {icon}).addTo(markersLayer)
+       .bindPopup(`<b>${o.name}</b><br>Status: ${o.status}`);
+    });
+  }
+
+  // Modal & Login Logic (Simplified for integration)
+  const loginBackdrop = document.getElementById("loginBackdrop");
+  document.getElementById("btnOpenLogin").onclick = () => loginBackdrop.style.display = "flex";
+  document.getElementById("btnLogin").onclick = () => loginBackdrop.style.display = "flex";
+  document.getElementById("btnCloseLogin").onclick = () => loginBackdrop.style.display = "none";
+  document.getElementById("btnHamptonRoads").onclick = () => {
+  map.setView([36.9, -76.3], 10);
+  refreshWeatherForMapCenter();
+};
+
+
+  document.getElementById("btnDoLogin").onclick = () => {
+    document.getElementById("orgLoggedOut").style.display = "none";
+    document.getElementById("orgPanel").style.display = "block";
+    document.getElementById("orgName").textContent = "Hampton Community Shelter";
+    document.getElementById("orgControls").innerHTML = "Status: <select><option>Open</option><option>Full</option></select>";
+    loginBackdrop.style.display = "none";
+  };
+
+  document.getElementById("btnLogout").onclick = () => {
+    document.getElementById("orgLoggedOut").style.display = "block";
+    document.getElementById("orgPanel").style.display = "none";
+  };
+
+  // Weather Demos
+  document.getElementById("btnFlood").onclick = () => {
+    incidentsLayer.clearLayers();
+    L.marker([36.95, -76.35], {icon: L.divIcon({html:"🌊", className:""})}).addTo(incidentsLayer);
+    document.getElementById("incidentStatus").textContent = "Incidents: 1 Flood reported";
+  };
+  document.getElementById("btnClearIncidents").onclick = () => {
+    incidentsLayer.clearLayers();
+    document.getElementById("incidentStatus").textContent = "Incidents: none";
+  };
+
+  async function refreshWeatherForMapCenter() {
+  const c = map.getCenter();
+  const lat = c.lat.toFixed(4);
+  const lon = c.lng.toFixed(4);
+
+  document.getElementById("weatherBox").textContent = "Weather: loading...";
+  document.getElementById("alertsBox").textContent = "Alerts: loading...";
+
+  try {
+    const res = await fetch(
+      `/api/weather/live?lat=${lat}&lon=${lon}`
+    );
+
+    if (!res.ok) throw new Error("API error");
+
+    const data = await res.json();
+
+    // Current weather
+    const cur = data.current || {};
+    const temp = cur.temperature_f != null
+      ? `${Math.round(cur.temperature_f)}°F`
+      : "—";
+    const desc = cur.text_description || "—";
+
+    document.getElementById("weatherBox").textContent =
+      `Weather: ${temp} • ${desc}`;
+
+    // Alerts
+    const alerts = data.alerts || [];
+    if (alerts.length === 0) {
+      document.getElementById("alertsBox").textContent =
+        "Alerts: none active ✅";
+    } else {
+      document.getElementById("alertsBox").textContent =
+        `Alerts: ${alerts.length} active ⚠️ • ${alerts[0].event}`;
+    }
+
+  } catch (err) {
+    document.getElementById("weatherBox").textContent =
+      "Weather: unavailable";
+    document.getElementById("alertsBox").textContent =
+      "Alerts: unavailable";
+  }
+}
+document.getElementById("btnRefresh").onclick = () => {
+  renderMarkers();
+  refreshWeatherForMapCenter();
+};
+  renderMarkers();
+  refreshWeatherForMapCenter();
+
+</script>
+
+</body>
+</html>
