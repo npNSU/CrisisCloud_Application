@@ -1,5 +1,3 @@
-
-<!--Login Screen Code-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -37,7 +35,7 @@
             padding: 0;
             box-sizing: border-box;
             font-family: Arial, sans-serif;
-            transition: background 0.3s, color 0.3s, border-color 0.3s;
+            transition: background 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
 
         body {
@@ -47,25 +45,20 @@
             min-height: 100vh;
             background: var(--bg-body);
             color: var(--text-main);
-        }
+            }
 
-        /* Theme Switcher Styles */
+        /* --- THEME TOGGLE SLIDER (SUN/MOON) --- */
         .theme-container {
             position: absolute;
-            top: 20px;
-            right: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.8rem;
-            color: var(--text-sub);
+            top: 25px;
+            right: 25px;
         }
 
         .switch {
             position: relative;
             display: inline-block;
-            width: 40px;
-            height: 20px;
+            width: 60px;
+            height: 30px;
         }
 
         .switch input { opacity: 0; width: 0; height: 0; }
@@ -74,27 +67,40 @@
             position: absolute;
             cursor: pointer;
             inset: 0;
-            background-color: #ccc;
+            background-color: #1f2a44;
             transition: .4s;
-            border-radius: 20px;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 8px;
+            border: 1px solid var(--border-color);
+        }
+
+        /* Icons inside the slider track */
+        .slider .icon {
+            font-size: 14px;
+            user-select: none;
         }
 
         .slider:before {
             position: absolute;
             content: "";
-            height: 14px;
-            width: 14px;
-            left: 3px;
+            height: 22px;
+            width: 22px;
+            left: 4px;
             bottom: 3px;
             background-color: white;
             transition: .4s;
             border-radius: 50%;
+            z-index: 2;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
         }
         
-        input:checked + .slider { background-color: var(--accent); }
-        input:checked + .slider:before { transform: translateX(20px); }
+        input:checked + .slider { background-color: #93c5fd; }
+        input:checked + .slider:before { transform: translateX(28px); }
 
-        /* CrisisCloud Specific Styles */
+        /* --- UI COMPONENTS --- */
         .login-card {
             background: var(--bg-card);
             padding: 2.5rem;
@@ -149,7 +155,7 @@
 
         input {
             width: 100%;
-            padding: 0.8rem;
+            padding: 0.85rem;
             padding-right: 45px;
             border: 1px solid var(--border-color);
             background: var(--bg-input);
@@ -165,16 +171,17 @@
 
         .toggle-password {
             position: absolute;
-            right: 12px;
+            right: 15px;
             top: 38px;
             cursor: pointer;
             color: var(--text-sub);
+            font-size: 1.1rem;
             z-index: 5;
         }
 
         .btn {
             width: 100%;
-            padding: 0.85rem;
+            padding: 0.9rem;
             border: none;
             border-radius: 10px;
             background: var(--accent);
@@ -189,6 +196,8 @@
             background: var(--accent-hover);
             transform: translateY(-1px);
         }
+
+        .btn:disabled { opacity: 0.4; transform: none; cursor: not-allowed; }
 
         .gen-pass {
             font-size: 0.75rem;
@@ -207,8 +216,9 @@
             color: var(--text-sub);
         }
 
-        .options a { color: var(--accent); text-decoration: none; }
+        .options a { color: var(--accent); text-decoration: none; font-weight: 600; }
 
+        /* Modal implementation */
         .modal-overlay {
             display: none;
             position: fixed;
@@ -230,14 +240,17 @@
             text-align: center;
         }
     </style>
+    
 </head>
-<body>
+<body data-theme="dark">
 
     <div class="theme-container">
-     
         <label class="switch">
-            <input type="checkbox" id="theme-toggle" checked>
-            <span class="slider"></span>
+            <input type="checkbox" id="theme-toggle">
+            <div class="slider">
+                <span class="icon">🌙</span>
+                <span class="icon">☀️</span>
+            </div>
         </label>
     </div>
 
@@ -264,7 +277,7 @@
                 </div>
 
                 <div class="options">
-                    <label style="display: flex; align-items: center; gap: 8px;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
                         <input type="checkbox" style="width: auto;"> Remember
                     </label>
                     <a href="#" onclick="showRecovery()">Forgot Password?</a>
@@ -279,7 +292,7 @@
             <form onsubmit="return false;">
                 <div class="input-group">
                     <label>Email or Username</label>
-                    <input type="text" placeholder="Create username or Use email account">
+                    <input type="text" placeholder="Create username or email">
                 </div>
                 <div class="input-group">
                     <span class="gen-pass" onclick="generatePass()">Suggest Secure Pass</span>
@@ -318,18 +331,28 @@
     <script>
         // --- THEME LOGIC ---
         const themeToggle = document.getElementById('theme-toggle');
+        // Set initial state based on default theme
+        themeToggle.checked = document.body.getAttribute('data-theme') === 'light';
+
         themeToggle.addEventListener('change', () => {
             if (themeToggle.checked) {
-                document.documentElement.setAttribute('data-theme', 'dark');
+                document.body.setAttribute('data-theme', 'light');
             } else {
-                document.documentElement.setAttribute('data-theme', 'light');
+                document.body.setAttribute('data-theme', 'dark');
             }
         });
 
-        // --- PREVIOUS UTILITIES ---
+        // --- UTILITIES ---
         function toggleVisibility(inputId) {
             const input = document.getElementById(inputId);
-            input.type = input.type === "password" ? "text" : "password";
+            const icon = event.currentTarget;
+            if (input.type === "password") {
+                input.type = "text";
+                icon.textContent = "🙈";
+            } else {
+                input.type = "password";
+                icon.textContent = "👁️";
+            }
         }
 
         function switchTab(sectionId) {
@@ -353,11 +376,58 @@
             const btn = document.getElementById('reg-btn');
             error.style.display = (p2 && p1 !== p2) ? 'block' : 'none';
             btn.disabled = (p2 && p1 !== p2);
-            btn.style.opacity = (p2 && p1 !== p2) ? '0.4' : '1';
         }
 
         function showRecovery() { document.getElementById('recoveryModal').style.display = 'flex'; }
         function closeRecovery() { document.getElementById('recoveryModal').style.display = 'none'; }
     </script>
 </body>
-</html>
+<div class="settings-container">
+    <button class="gear-btn" id="gearBtn" onclick="toggleSettings()">⚙️</button>
+    
+    <div class="settings-dropdown" id="settingsMenu">
+        <h3>Settings</h3>
+        
+        <div class="setting-item">
+            <span>Push Notifications</span>
+            <label class="switch-small">
+                <input type="checkbox" checked>
+                <span class="slider-small"></span>
+            </label>
+        </div>
+
+        <div class="setting-item">
+            <span>Critical Alerts</span>
+            <label class="switch-small">
+                <input type="checkbox" checked>
+                <span class="slider-small"></span>
+            </label>
+        </div>
+
+        <div class="setting-item-column">
+            <div class="setting-label-row">
+                <span>Alert Volume</span>
+                <span id="volLevel">100%</span>
+            </div>
+            <input type="range" min="0" max="100" value="80" class="range-slider" oninput="updateVol(this.value)">
+        </div>
+
+        <div class="setting-item">
+            <span>Haptic Vibration</span>
+            <label class="switch-small">
+                <input type="checkbox">
+                <span class="slider-small"></span>
+            </label>
+        </div>
+    </div>
+</div>
+<!--</html>-->
+<!--Settings Screen Options Code-->
+<!--Location Option-->
+    <!--Permission Access Option Code-->
+<!--Notifications-->
+    <!--Alerts Code-->
+    <!--Sound Silder  Code-->
+    <!--Vibration Code-->
+
+
