@@ -1,3 +1,4 @@
+/* Newly added changes */
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -217,6 +218,30 @@
       border: 1px solid var(--border-color) !important;
     }
 
+    .resourceMarker {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      border: 2px solid rgba(255,255,255,0.7);
+      box-shadow: 0 8px 16px rgba(0,0,0,0.25);
+      color: #fff;
+    }
+    .resourceMarker.shelter { background: #2563eb; }
+    .resourceMarker.food { background: #ea580c; }
+    .resourceMarker.police { background: #1d4ed8; }
+    .resourceMarker.fire { background: #dc2626; }
+    .resourceMarker.towing { background: #7c3aed; }
+    .resourceMarker.status-open { box-shadow: 0 0 0 4px rgba(34,197,94,0.28), 0 8px 16px rgba(0,0,0,0.25); }
+    .resourceMarker.status-available { box-shadow: 0 0 0 4px rgba(34,197,94,0.28), 0 8px 16px rgba(0,0,0,0.25); }
+    .resourceMarker.status-limited { box-shadow: 0 0 0 4px rgba(250,204,21,0.30), 0 8px 16px rgba(0,0,0,0.25); }
+    .resourceMarker.status-full,
+    .resourceMarker.status-closed,
+    .resourceMarker.status-busy { box-shadow: 0 0 0 4px rgba(244,63,94,0.30), 0 8px 16px rgba(0,0,0,0.25); }
+
     .backdrop {
       position: fixed;
       inset: 0;
@@ -249,6 +274,72 @@
       color: var(--text-small);
       font-size: 13px;
     }
+    .forecastGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .forecastCard {
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--bg-input);
+      padding: 10px;
+    }
+    .forecastName {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .forecastTemp {
+      margin-top: 6px;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .forecastSummary {
+      margin-top: 6px;
+      font-size: 12px;
+      color: var(--text-small);
+      line-height: 1.4;
+    }
+    .forecastMeta {
+      margin-top: 6px;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .contactList {
+      display: grid;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    .contactCard {
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--bg-input);
+      padding: 12px;
+    }
+    .contactTitle {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .contactPhone {
+      margin-top: 6px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .contactMeta {
+      margin-top: 4px;
+      font-size: 12px;
+      color: var(--text-small);
+    }
+    .directoryCardButton {
+      width: 100%;
+      text-align: left;
+      cursor: pointer;
+    }
     body.modal-open #map { filter: blur(2px); opacity: 0.6; }
   </style>
 </head>
@@ -276,11 +367,14 @@
   <div class="grid">
     <section class="card">
       <h2>Public Dashboard</h2>
-      <p>Real-time shelter capacity and incident reports.</p>
+      <p>Real-time shelter capacity, emergency services, and incident reports.</p>
 
       <div class="legend">
         <div class="legendItem"><span style="font-size:18px">🏠</span><span>Shelter</span></div>
         <div class="legendItem"><span style="font-size:18px">🥫</span><span>Food Bank</span></div>
+        <div class="legendItem"><span style="font-size:18px">🚓</span><span>Police</span></div>
+        <div class="legendItem"><span style="font-size:18px">🚒</span><span>Fire</span></div>
+        <div class="legendItem"><span style="font-size:18px">🛻</span><span>Towing</span></div>
         <div class="legendItem"><span style="font-size:18px">📍</span><span>Incident</span></div>
       </div>
 
@@ -296,6 +390,9 @@
           <option value="all">All Types</option>
           <option value="shelter">Shelters</option>
           <option value="food">Food Banks</option>
+          <option value="police">Police</option>
+          <option value="fire">Fire</option>
+          <option value="towing">Towing</option>
         </select>
         <input id="search" placeholder="Search city..." />
         <button class="primary" id="btnRefresh">Refresh</button>
@@ -311,6 +408,11 @@
 <div class="mutedBox" id="alertsBox" style="margin-top:10px;">
   Alerts: —
 </div>
+
+      <div class="weatherTitle">Hampton Roads Weekly Forecast</div>
+      <div class="forecastGrid" id="forecastGrid">
+        <div class="forecastCard">Forecast loading...</div>
+      </div>
     </section>
 
     <aside class="card">
@@ -318,6 +420,16 @@
       <div id="orgLoggedOut">
         <p>Authorized personnel only.</p>
         <button class="primary" style="margin-top:15px;" id="btnOpenLogin">Login to Update Status</button>
+      </div>
+
+      <div class="weatherTitle">Emergency Contact Directory</div>
+      <div class="contactList" id="contactList">
+        <div class="contactCard">Contact information loading...</div>
+      </div>
+
+      <div class="weatherTitle">Shelter And Food Directory</div>
+      <div class="contactList" id="resourceDirectory">
+        <div class="contactCard">Shelter and food bank information loading...</div>
       </div>
 
       <div id="orgPanel" style="display:none; margin-top:14px;">
@@ -346,146 +458,378 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
-  const demoOrgs = [
-    { id:"sh1", type:"shelter", name:"Hampton Community Shelter", city:"Hampton, VA", lat:37.0299, lon:-76.3452, status:"open", spaceLeft: 45 },
-    { id:"sh2", type:"shelter", name:"Norfolk Emergency Shelter", city:"Norfolk, VA", lat:36.8508, lon:-76.2859, status:"limited", spaceLeft: 18 },
-    { id:"fb1", type:"food", name:"Peninsula Food Bank", city:"Newport News, VA", lat:37.0871, lon:-76.4730, status:"open", foodLeft: 340 }
-  ];
+  const RESOURCE_POLL_MS = 5000;
+  let resources = [];
+  let loggedInResourceId = null;
+  let activeFilter = "all";
+  let activeSearch = "";
 
-  // Theme Logic
-  const themeCheckbox = document.getElementById('themeCheckbox');
+  const themeCheckbox = document.getElementById("themeCheckbox");
+  const filterType = document.getElementById("filterType");
+  const searchInput = document.getElementById("search");
+  const loginBackdrop = document.getElementById("loginBackdrop");
+  const loginOrg = document.getElementById("loginOrg");
+  const orgLoggedOut = document.getElementById("orgLoggedOut");
+  const orgPanel = document.getElementById("orgPanel");
+  const orgName = document.getElementById("orgName");
+  const orgControls = document.getElementById("orgControls");
+  const locStatus = document.getElementById("locStatus");
+  const weatherBox = document.getElementById("weatherBox");
+  const alertsBox = document.getElementById("alertsBox");
+  const forecastGrid = document.getElementById("forecastGrid");
+  const contactList = document.getElementById("contactList");
+  const resourceDirectory = document.getElementById("resourceDirectory");
   let mapTileLayer;
+  let markerById = {};
+  const resourceIcons = {
+    shelter: "🏠",
+    food: "🥫",
+    police: "🚓",
+    fire: "🚒",
+    towing: "🛻"
+  };
+  const resourceMeta = {
+    shelter: { countField: "spaceLeft", countLabel: "Beds left", statusOptions: ["open", "limited", "full"] },
+    food: { countField: "foodLeft", countLabel: "Meals available", statusOptions: ["open", "limited", "closed"] },
+    police: { countField: "unitsAvailable", countLabel: "Units available", statusOptions: ["available", "limited", "busy"] },
+    fire: { countField: "trucksAvailable", countLabel: "Fire trucks available", statusOptions: ["available", "limited", "busy"] },
+    towing: { countField: "towTrucksAvailable", countLabel: "Tow trucks available", statusOptions: ["available", "limited", "busy"] }
+  };
 
   function updateMapTheme(isLight) {
     if (mapTileLayer) map.removeLayer(mapTileLayer);
-    
-    const url = isLight 
+
+    const url = isLight
       ? "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
       : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
-    
+
     mapTileLayer = L.tileLayer(url, {
-      attribution: '&copy; CartoDB / OpenStreetMap'
+      attribution: "&copy; CartoDB / OpenStreetMap"
     }).addTo(map);
   }
 
-  themeCheckbox.addEventListener('change', () => {
+  themeCheckbox.addEventListener("change", () => {
     const isLight = themeCheckbox.checked;
-    document.documentElement.setAttribute('data-theme', isLight ? 'light' : 'dark');
+    document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
     updateMapTheme(isLight);
-    localStorage.setItem('crisisTheme', isLight ? 'light' : 'dark');
+    localStorage.setItem("crisisTheme", isLight ? "light" : "dark");
   });
 
-  // Initial Theme Load
-  const savedTheme = localStorage.getItem('crisisTheme');
-  if (savedTheme === 'light') {
+  const savedTheme = localStorage.getItem("crisisTheme");
+  if (savedTheme === "light") {
     themeCheckbox.checked = true;
-    document.documentElement.setAttribute('data-theme', 'light');
+    document.documentElement.setAttribute("data-theme", "light");
   }
 
-  // Map Init
   const map = L.map("map").setView([36.9, -76.3], 10);
-  updateMapTheme(savedTheme === 'light');
+  updateMapTheme(savedTheme === "light");
 
   const markersLayer = L.layerGroup().addTo(map);
   const incidentsLayer = L.layerGroup().addTo(map);
 
-  function renderMarkers(){
-    markersLayer.clearLayers();
-    demoOrgs.forEach(o => {
-      const emoji = o.type === "shelter" ? "🏠" : "🥫";
-      const icon = L.divIcon({ html: `<div style="font-size:24px;">${emoji}</div>`, className: "" });
-      L.marker([o.lat, o.lon], {icon}).addTo(markersLayer)
-       .bindPopup(`<b>${o.name}</b><br>Status: ${o.status}`);
+  function resourceMetricLabel(resource) {
+    const meta = resourceMeta[resource.type];
+    if (!meta) return "";
+    return `${meta.countLabel}: ${resource[meta.countField] ?? 0}`;
+  }
+
+  function createResourceIcon(resource) {
+    const emoji = resourceIcons[resource.type] || "📍";
+    const safeStatus = (resource.status || "open").toLowerCase();
+    return L.divIcon({
+      className: "",
+      iconSize: [34, 34],
+      iconAnchor: [17, 17],
+      popupAnchor: [0, -16],
+      html: `<div class="resourceMarker ${resource.type} status-${safeStatus}" title="${resource.name}">${emoji}</div>`
     });
   }
 
-  // Modal & Login Logic (Simplified for integration)
-  const loginBackdrop = document.getElementById("loginBackdrop");
+  function filteredResources() {
+    return resources.filter((resource) => {
+      const matchesType = activeFilter === "all" || resource.type === activeFilter;
+      const searchTarget = `${resource.name} ${resource.city}`.toLowerCase();
+      const matchesSearch = !activeSearch || searchTarget.includes(activeSearch);
+      return matchesType && matchesSearch;
+    });
+  }
+
+  function renderMarkers() {
+    markersLayer.clearLayers();
+    markerById = {};
+    filteredResources().forEach((resource) => {
+      const marker = L.marker([resource.lat, resource.lon], { icon: createResourceIcon(resource) })
+        .addTo(markersLayer)
+        .bindPopup(
+          `<b>${resource.name}</b><br>${resource.address || resource.city}<br>Status: ${resource.status}<br>${resourceMetricLabel(resource)}<br>Phone: ${resource.phone || "—"}`
+        );
+      markerById[resource.id] = marker;
+    });
+  }
+
+  function renderLoginOptions() {
+    loginOrg.innerHTML = resources.map((resource) =>
+      `<option value="${resource.id}">${resource.name}</option>`
+    ).join("");
+  }
+
+  function renderContactDirectory() {
+    const emergencyResources = resources.filter((resource) =>
+      ["police", "fire", "towing"].includes(resource.type)
+    );
+
+    if (emergencyResources.length === 0) {
+      contactList.innerHTML = `<div class="contactCard">No emergency contact information available.</div>`;
+      return;
+    }
+
+    contactList.innerHTML = emergencyResources.map((resource) => `
+      <div class="contactCard">
+        <div class="contactTitle">${resourceIcons[resource.type] || "📍"} ${resource.name}</div>
+        <div class="contactPhone">${resource.phone || "Phone unavailable"}</div>
+        <div class="contactMeta">${resource.address || resource.city}</div>
+        <div class="contactMeta">${resourceMetricLabel(resource)}</div>
+      </div>
+    `).join("");
+  }
+
+  function renderResourceDirectory() {
+    const visibleResources = resources.filter((resource) =>
+      ["shelter", "food"].includes(resource.type)
+    );
+
+    if (visibleResources.length === 0) {
+      resourceDirectory.innerHTML = `<div class="contactCard">No shelter or food bank information available.</div>`;
+      return;
+    }
+
+    resourceDirectory.innerHTML = visibleResources.map((resource) => `
+      <button class="contactCard directoryCardButton" type="button" data-resource-id="${resource.id}">
+        <div class="contactTitle">${resourceIcons[resource.type] || "📍"} ${resource.name}</div>
+        <div class="contactMeta">${resource.address || resource.city}</div>
+        <div class="contactMeta">Status: ${resource.status}</div>
+        <div class="contactMeta">${resourceMetricLabel(resource)}</div>
+      </button>
+    `).join("");
+  }
+
+  function focusResourceOnMap(resourceId) {
+    const resource = resources.find((item) => item.id === resourceId);
+    if (!resource) return;
+
+    if (activeFilter !== "all" && activeFilter !== resource.type) {
+      activeFilter = "all";
+      filterType.value = "all";
+      renderMarkers();
+    }
+    map.setView([resource.lat, resource.lon], 13);
+    const marker = markerById[resourceId];
+    if (marker) {
+      marker.openPopup();
+    }
+  }
+
+  function renderOrgControls() {
+    const resource = resources.find((item) => item.id === loggedInResourceId);
+    if (!resource) return;
+
+    orgName.textContent = resource.name;
+    const meta = resourceMeta[resource.type];
+    const statusOptions = meta.statusOptions;
+    const metricId = "orgCountValue";
+    const metricLabel = meta.countLabel;
+    const metricValue = resource[meta.countField] ?? 0;
+
+    orgControls.innerHTML = `
+      <div class="label">Status</div>
+      <select id="orgStatus" style="width:100%">
+        ${statusOptions.map((status) =>
+          `<option value="${status}" ${resource.status === status ? "selected" : ""}>${status}</option>`
+        ).join("")}
+      </select>
+      <div class="label">${metricLabel}</div>
+      <input id="${metricId}" type="number" min="0" value="${metricValue}" style="width:100%" />
+      <div class="label">Phone Number</div>
+      <input id="orgPhone" type="text" value="${resource.phone || ""}" style="width:100%" />
+      <div class="small">Updates save to the shared demo backend and appear on all connected dashboards during refresh polling.</div>
+    `;
+  }
+
+  async function loadResources() {
+    const res = await fetch("/api/resources");
+    if (!res.ok) throw new Error("Unable to load resources");
+
+    const data = await res.json();
+    resources = data.resources || [];
+    renderLoginOptions();
+    renderContactDirectory();
+    renderMarkers();
+    renderResourceDirectory();
+
+    if (loggedInResourceId && resources.some((item) => item.id === loggedInResourceId)) {
+      renderOrgControls();
+    }
+  }
+
   document.getElementById("btnOpenLogin").onclick = () => loginBackdrop.style.display = "flex";
   document.getElementById("btnLogin").onclick = () => loginBackdrop.style.display = "flex";
   document.getElementById("btnCloseLogin").onclick = () => loginBackdrop.style.display = "none";
   document.getElementById("btnHamptonRoads").onclick = () => {
-  map.setView([36.9, -76.3], 10);
-  refreshWeatherForMapCenter();
-};
-
+    map.setView([36.9, -76.3], 10);
+    refreshWeatherForMapCenter();
+  };
 
   document.getElementById("btnDoLogin").onclick = () => {
-    document.getElementById("orgLoggedOut").style.display = "none";
-    document.getElementById("orgPanel").style.display = "block";
-    document.getElementById("orgName").textContent = "Hampton Community Shelter";
-    document.getElementById("orgControls").innerHTML = "Status: <select><option>Open</option><option>Full</option></select>";
+    loggedInResourceId = loginOrg.value;
+    orgLoggedOut.style.display = "none";
+    orgPanel.style.display = "block";
+    renderOrgControls();
     loginBackdrop.style.display = "none";
   };
 
   document.getElementById("btnLogout").onclick = () => {
-    document.getElementById("orgLoggedOut").style.display = "block";
-    document.getElementById("orgPanel").style.display = "none";
+    loggedInResourceId = null;
+    orgLoggedOut.style.display = "block";
+    orgPanel.style.display = "none";
   };
 
-  // Weather Demos
+  document.getElementById("btnSaveOrgUpdate").onclick = async () => {
+    const resource = resources.find((item) => item.id === loggedInResourceId);
+    if (!resource) return;
+    const meta = resourceMeta[resource.type];
+
+    const payload = {
+      status: document.getElementById("orgStatus").value,
+      phone: document.getElementById("orgPhone").value
+    };
+    payload[meta.countField] = document.getElementById("orgCountValue").value;
+
+    const res = await fetch(`/api/resources/${resource.id}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    if (!res.ok) {
+      alert("Unable to save update right now.");
+      return;
+    }
+
+    const data = await res.json();
+    resources = data.resources || resources;
+    renderMarkers();
+    renderOrgControls();
+  };
+
   document.getElementById("btnFlood").onclick = () => {
     incidentsLayer.clearLayers();
-    L.marker([36.95, -76.35], {icon: L.divIcon({html:"🌊", className:""})}).addTo(incidentsLayer);
+    L.marker([36.95, -76.35], { icon: L.divIcon({ html: "🌊", className: "" }) }).addTo(incidentsLayer);
     document.getElementById("incidentStatus").textContent = "Incidents: 1 Flood reported";
   };
+
+  document.getElementById("btnHurricane").onclick = () => {
+    incidentsLayer.clearLayers();
+    L.marker([36.90, -76.20], { icon: L.divIcon({ html: "🌀", className: "" }) }).addTo(incidentsLayer);
+    document.getElementById("incidentStatus").textContent = "Incidents: 1 Hurricane warning marker";
+  };
+
+  document.getElementById("btnStorm").onclick = () => {
+    incidentsLayer.clearLayers();
+    L.marker([36.88, -76.32], { icon: L.divIcon({ html: "⛈️", className: "" }) }).addTo(incidentsLayer);
+    document.getElementById("incidentStatus").textContent = "Incidents: 1 Severe storm marker";
+  };
+
   document.getElementById("btnClearIncidents").onclick = () => {
     incidentsLayer.clearLayers();
     document.getElementById("incidentStatus").textContent = "Incidents: none";
   };
 
   async function refreshWeatherForMapCenter() {
-  const c = map.getCenter();
-  const lat = c.lat.toFixed(4);
-  const lon = c.lng.toFixed(4);
+    const c = map.getCenter();
+    const lat = c.lat.toFixed(4);
+    const lon = c.lng.toFixed(4);
 
-  document.getElementById("weatherBox").textContent = "Weather: loading...";
-  document.getElementById("alertsBox").textContent = "Alerts: loading...";
+    weatherBox.textContent = "Weather: loading...";
+    alertsBox.textContent = "Alerts: loading...";
+    forecastGrid.innerHTML = `<div class="forecastCard">Forecast loading...</div>`;
 
-  try {
-    const res = await fetch(
-      `/api/weather/live?lat=${lat}&lon=${lon}`
-    );
+    try {
+      const res = await fetch(`/api/weather/live?lat=${lat}&lon=${lon}`);
+      if (!res.ok) throw new Error("API error");
 
-    if (!res.ok) throw new Error("API error");
+      const data = await res.json();
+      const cur = data.current || {};
+      const temp = cur.temperature_f != null ? `${Math.round(cur.temperature_f)}°F` : "—";
+      const desc = cur.text_description || "—";
 
-    const data = await res.json();
+      weatherBox.textContent = `Weather: ${temp} • ${desc}`;
 
-    // Current weather
-    const cur = data.current || {};
-    const temp = cur.temperature_f != null
-      ? `${Math.round(cur.temperature_f)}°F`
-      : "—";
-    const desc = cur.text_description || "—";
+      const alerts = data.alerts || [];
+      if (alerts.length === 0) {
+        alertsBox.textContent = "Alerts: none active ✅";
+      } else {
+        alertsBox.textContent = `Alerts: ${alerts.length} active ⚠️ • ${alerts[0].event}`;
+      }
 
-    document.getElementById("weatherBox").textContent =
-      `Weather: ${temp} • ${desc}`;
-
-    // Alerts
-    const alerts = data.alerts || [];
-    if (alerts.length === 0) {
-      document.getElementById("alertsBox").textContent =
-        "Alerts: none active ✅";
-    } else {
-      document.getElementById("alertsBox").textContent =
-        `Alerts: ${alerts.length} active ⚠️ • ${alerts[0].event}`;
+      const forecast = data.forecast || [];
+      if (forecast.length === 0) {
+        forecastGrid.innerHTML = `<div class="forecastCard">Weekly forecast unavailable.</div>`;
+      } else {
+        forecastGrid.innerHTML = forecast.map((period) => `
+          <div class="forecastCard">
+            <div class="forecastName">${period.name || "Upcoming"}</div>
+            <div class="forecastTemp">${period.temperature ?? "—"}${period.temperature_unit || ""}</div>
+            <div class="forecastSummary">${period.short_forecast || "No summary available."}</div>
+            <div class="forecastMeta">${period.wind_speed || "—"} ${period.wind_direction || ""}</div>
+          </div>
+        `).join("");
+      }
+    } catch (err) {
+      weatherBox.textContent = "Weather: unavailable";
+      alertsBox.textContent = "Alerts: unavailable";
+      forecastGrid.innerHTML = `<div class="forecastCard">Weekly forecast unavailable.</div>`;
     }
-
-  } catch (err) {
-    document.getElementById("weatherBox").textContent =
-      "Weather: unavailable";
-    document.getElementById("alertsBox").textContent =
-      "Alerts: unavailable";
   }
-}
-document.getElementById("btnRefresh").onclick = () => {
-  renderMarkers();
+
+  document.getElementById("btnRefresh").onclick = () => {
+    loadResources().catch(() => {
+      locStatus.textContent = "Resource feed unavailable";
+    });
+    refreshWeatherForMapCenter();
+  };
+
+  filterType.onchange = (event) => {
+    activeFilter = event.target.value;
+    renderMarkers();
+  };
+
+  searchInput.oninput = (event) => {
+    activeSearch = event.target.value.trim().toLowerCase();
+    renderMarkers();
+  };
+
+  resourceDirectory.onclick = (event) => {
+    const button = event.target.closest("[data-resource-id]");
+    if (!button) return;
+    focusResourceOnMap(button.getAttribute("data-resource-id"));
+  };
+
+  loadResources()
+    .then(() => {
+      locStatus.textContent = "Map centered on Hampton Roads • shared resource feed live";
+    })
+    .catch(() => {
+      locStatus.textContent = "Resource feed unavailable";
+    });
+
   refreshWeatherForMapCenter();
-};
-  renderMarkers();
-  refreshWeatherForMapCenter();
+  window.setInterval(() => {
+    loadResources().catch(() => {});
+  }, RESOURCE_POLL_MS);
 
 </script>
 
 </body>
 </html>
+
+
