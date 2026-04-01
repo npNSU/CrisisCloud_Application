@@ -1,4 +1,4 @@
-<!--Newly added changes -->
+<!--Newly added changes: Includes New Icons Art-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -14,6 +14,7 @@
   />
   <style>
     /* ===== THEME VARIABLES ===== */
+  
     :root {
       --bg-body: #0b1220;
       --bg-card: #101a2e;
@@ -84,6 +85,7 @@
             transition: .4s;
             border-radius: 20px;
     }
+    
     .slider:before {
       position: absolute;
       content: "🌙";
@@ -117,7 +119,7 @@
     h3 { margin: 0 0 8px; font-size: 14px; color: var(--text-main); }
     p { margin: 6px 0 0; color: var(--text-small); line-height: 1.35; }
 
-    button, select, input {
+   button, select, input {
       padding: 10px 14px;
       border-radius: 10px;
       border: 1px solid var(--border-color);
@@ -160,7 +162,7 @@
       border-radius: 14px;
       padding: 16px;
     }
-
+    
     #map {
       width: 100%;
       height: 420px;
@@ -369,21 +371,64 @@
       <h2>Public Dashboard</h2>
       <p>Real-time shelter capacity, emergency services, and incident reports.</p>
 
-      <div class="legend">
-        <div class="legendItem"><span style="font-size:18px">🏠</span><span>Shelter</span></div>
-        <div class="legendItem"><span style="font-size:18px">🥫</span><span>Food Bank</span></div>
-        <div class="legendItem"><span style="font-size:18px">🚓</span><span>Police</span></div>
-        <div class="legendItem"><span style="font-size:18px">🚒</span><span>Fire</span></div>
-        <div class="legendItem"><span style="font-size:18px">🛻</span><span>Towing</span></div>
-        <div class="legendItem"><span style="font-size:18px">📍</span><span>Incident</span></div>
-      </div>
+       <div class="legend">
+        <div class ="legendItem">
+          <img src ="newIcons/shelter.png"style="width:20px; height:20px;">
+           <span>Shelter</span>
 
-      <div class="weatherButtons">
-        <button class="weatherBtn" id="btnFlood">🌊 Flood</button>
-        <button class="weatherBtn" id="btnHurricane">🌀 Hurricane</button>
-        <button class="weatherBtn" id="btnStorm">⛈️ Storm</button>
-        <button class="weatherBtn" id="btnClearIncidents">Clear</button>
+        <img src ="newIcons/foodBank.png"style="width:20px; height:20px;">
+           <span>Food Bank</span> 
+
+         <img src ="newIcons/police.png"style="width:20px; height:20px;">
+           <span>Police</span> 
+
+         <img src ="newIcons/towing.png"style="width:20px; height:20px;">
+           <span>Towing</span> 
+
+         <img src ="newIcons/ambulance.png"style="width:20px; height:20px;">
+           <span>Ambulance</span> 
+        
+         <img src ="newIcons/incident.png"style="width:20px; height:20px;">
+           <span>Incident</span> 
+          </div>
       </div>
+    
+      <div class="weatherButtons">
+             <button class="weatherBtn" id="btnFlood">
+              <img src="newIcons/flood.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Flood 
+            </button>
+
+            <button class="weatherBtn" id="btnHurricane">
+              <img src="newIcons/hurricane.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Hurricane
+            </button>
+            
+            <button class="weatherBtn" id="btnStorm">
+               <img src="newIcons/storm.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Storm
+              </button>
+
+             <button class="weatherBtn" id="btnBlizzard">
+               <img src="newIcons/blizzard.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Blizzard
+              </button>
+
+             <button class="weatherBtn" id="btnFreezing Rain">
+               <img src="newIcons/freezingRain.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Freezing Rain
+              </button>
+
+             <button class="weatherBtn" id="btnHail">
+               <img src="newIcons/hail.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Hail
+              </button>
+
+             <button class="weatherBtn" id="btnRain">
+               <img src="newIcons/rain.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Rain
+              </button>
+
+             <button class="weatherBtn" id="btnSnow">
+               <img src="newIcons/snow.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Snow
+              </button>
+              
+              <button class="weatherBtn" id="btnClearIncidents">Clear</button>
+            </div>
+          </div>
 
       <div class="toolbar">
         <select id="filterType">
@@ -481,13 +526,15 @@
   const resourceDirectory = document.getElementById("resourceDirectory");
   let mapTileLayer;
   let markerById = {};
+
   const resourceIcons = {
-    shelter: "🏠",
-    food: "🥫",
-    police: "🚓",
-    fire: "🚒",
-    towing: "🛻"
+    shelter: "newIcons/shelter.png",
+    food: "newIcons/foodBank.png",
+    police: "newIcons/police.png",
+    ambulance: "newIcons/ambulance.png",
+    towing: "newIcons/towing.png",
   };
+
   const resourceMeta = {
     shelter: { countField: "spaceLeft", countLabel: "Beds left", statusOptions: ["open", "limited", "full"] },
     food: { countField: "foodLeft", countLabel: "Meals available", statusOptions: ["open", "limited", "closed"] },
@@ -496,17 +543,15 @@
     towing: { countField: "towTrucksAvailable", countLabel: "Tow trucks available", statusOptions: ["available", "limited", "busy"] }
   };
 
-  function updateMapTheme(isLight) {
+ function updateMapTheme(isLight) {
     if (mapTileLayer) map.removeLayer(mapTileLayer);
-
-    const url = isLight
-      ? "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+    const url = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
 
     mapTileLayer = L.tileLayer(url, {
-      attribution: "&copy; CartoDB / OpenStreetMap"
+      attribution: "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
     }).addTo(map);
   }
+
 
   themeCheckbox.addEventListener("change", () => {
     const isLight = themeCheckbox.checked;
@@ -533,17 +578,20 @@
     return `${meta.countLabel}: ${resource[meta.countField] ?? 0}`;
   }
 
-  function createResourceIcon(resource) {
-    const emoji = resourceIcons[resource.type] || "📍";
+  function createResourceIcon(resource){
+    const iconPath = resourceIcons[resource.type] || "newIcons/incident.png"; 
     const safeStatus = (resource.status || "open").toLowerCase();
     return L.divIcon({
-      className: "",
-      iconSize: [34, 34],
-      iconAnchor: [17, 17],
-      popupAnchor: [0, -16],
-      html: `<div class="resourceMarker ${resource.type} status-${safeStatus}" title="${resource.name}">${emoji}</div>`
-    });
-  }
+    className: "",
+    iconSize: [34, 34],
+    iconAnchor: [17, 17],
+    popupAnchor: [0, -16],
+    // CHANGE: Use an <img> tag instead of raw text
+    html: `<div class="resourceMarker ${resource.type} status-${safeStatus}" title="${resource.name}">
+             <img src="${iconPath}" style="width:20px; height:20px;">
+           </div>`
+  });
+}
 
   function filteredResources() {
     return resources.filter((resource) => {
@@ -585,7 +633,7 @@
 
     contactList.innerHTML = emergencyResources.map((resource) => `
       <div class="contactCard">
-        <div class="contactTitle">${resourceIcons[resource.type] || "📍"} ${resource.name}</div>
+       <img src="${resourceIcons[resource.type] || 'newIcons/incident.png'}" style="width:16px; vertical-align:middle; margin-right:4px;">
         <div class="contactPhone">${resource.phone || "Phone unavailable"}</div>
         <div class="contactMeta">${resource.address || resource.city}</div>
         <div class="contactMeta">${resourceMetricLabel(resource)}</div>
@@ -605,7 +653,7 @@
 
     resourceDirectory.innerHTML = visibleResources.map((resource) => `
       <button class="contactCard directoryCardButton" type="button" data-resource-id="${resource.id}">
-        <div class="contactTitle">${resourceIcons[resource.type] || "📍"} ${resource.name}</div>
+        <img src="${resourceIcons[resource.type] || 'newIcons/incident.png'}" style="width:16px; vertical-align:middle; margin-right:4px;">
         <div class="contactMeta">${resource.address || resource.city}</div>
         <div class="contactMeta">Status: ${resource.status}</div>
         <div class="contactMeta">${resourceMetricLabel(resource)}</div>
@@ -720,29 +768,51 @@
     renderMarkers();
     renderOrgControls();
   };
+/* Continue Replacements -Weather Buttons: Flood, Hurricane, Storm, Blizzard, Freezing Rain, Hail, & Snow*/
+function addIncidentMarker(lat, lon, iconPath, statusText) {
+  incidentsLayer.clearLayers();
+  
+  const incidentIcon = L.divIcon({
+    className: 'custom-incident-icon', // Optional: add a CSS class for styling
+    html: `<img src="${iconPath}" style="width:30px; height:30px; filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));">`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
+  });
 
-  document.getElementById("btnFlood").onclick = () => {
-    incidentsLayer.clearLayers();
-    L.marker([36.95, -76.35], { icon: L.divIcon({ html: "🌊", className: "" }) }).addTo(incidentsLayer);
-    document.getElementById("incidentStatus").textContent = "Incidents: 1 Flood reported";
-  };
+  L.marker([lat, lon], { icon: incidentIcon }).addTo(incidentsLayer);
+  document.getElementById("incidentStatus").textContent = `Incidents: 1 ${statusText} reported`;
+}
 
-  document.getElementById("btnHurricane").onclick = () => {
-    incidentsLayer.clearLayers();
-    L.marker([36.90, -76.20], { icon: L.divIcon({ html: "🌀", className: "" }) }).addTo(incidentsLayer);
-    document.getElementById("incidentStatus").textContent = "Incidents: 1 Hurricane warning marker";
-  };
+// Button Listeners
+document.getElementById("btnFlood").onclick = () => 
+  addIncidentMarker(36.95, -76.35, "newIcons/flood.png", "Flood");
 
-  document.getElementById("btnStorm").onclick = () => {
-    incidentsLayer.clearLayers();
-    L.marker([36.88, -76.32], { icon: L.divIcon({ html: "⛈️", className: "" }) }).addTo(incidentsLayer);
-    document.getElementById("incidentStatus").textContent = "Incidents: 1 Severe storm marker";
-  };
+document.getElementById("btnHurricane").onclick = () => 
+  addIncidentMarker(36.90, -76.20, "newIcons/hurricane.png", "Hurricane");
 
-  document.getElementById("btnClearIncidents").onclick = () => {
-    incidentsLayer.clearLayers();
-    document.getElementById("incidentStatus").textContent = "Incidents: none";
-  };
+document.getElementById("btnStorm").onclick = () => 
+  addIncidentMarker(36.88, -76.32, "newIcons/storm.png", "Storm");
+
+document.getElementById("btnBlizzard").onclick = () => 
+  addIncidentMarker(37.00, -76.30, "newIcons/blizzard.png", "Blizzard");
+
+document.getElementById("btnFreezing Rain").onclick = () => 
+  addIncidentMarker(36.85, -76.10, "newIcons/freezingRain.png", "Freezing Rain");
+
+document.getElementById("btnHail").onclick = () => 
+  addIncidentMarker(36.75, -76.25, "newIcons/hail.png", "Hail");
+
+document.getElementById("btnRain").onclick = () => 
+  addIncidentMarker(36.80, -76.05, "newIcons/rain.png", "Rain");
+
+document.getElementById("btnSnow").onclick = () => 
+  addIncidentMarker(36.92, -76.40, "newIcons/snow.png", "Snow");
+
+document.getElementById("btnClearIncidents").onclick = () => {
+  incidentsLayer.clearLayers();
+  document.getElementById("incidentStatus").textContent = "Incidents: none";
+};
+ 
 
   async function refreshWeatherForMapCenter() {
     const c = map.getCenter();
