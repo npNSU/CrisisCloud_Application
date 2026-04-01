@@ -1,4 +1,4 @@
-<!--Newly added changes: Includes New Icons Art-->
+<!--New Changes: Implemented new Icons-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -373,57 +373,57 @@
 
        <div class="legend">
         <div class ="legendItem">
-          <img src ="newIcons/shelter.png"style="width:20px; height:20px;">
+          <img src ="../newIcons/shelter.png" style="width:20px; height:20px;">
            <span>Shelter</span>
 
-        <img src ="newIcons/foodBank.png"style="width:20px; height:20px;">
+        <img src ="../newIcons/foodBank.png" style="width:20px; height:20px;">
            <span>Food Bank</span> 
 
-         <img src ="newIcons/police.png"style="width:20px; height:20px;">
+         <img src ="../newIcons/police.png" style="width:20px; height:20px;">
            <span>Police</span> 
 
-         <img src ="newIcons/towing.png"style="width:20px; height:20px;">
+         <img src ="../newIcons/towing.png" style="width:20px; height:20px;">
            <span>Towing</span> 
 
-         <img src ="newIcons/ambulance.png"style="width:20px; height:20px;">
+         <img src ="../newIcons/ambulance.png" style="width:20px; height:20px;">
            <span>Ambulance</span> 
         
-         <img src ="newIcons/incident.png"style="width:20px; height:20px;">
+         <img src ="../newIcons/incident.png" style="width:20px; height:20px;">
            <span>Incident</span> 
           </div>
       </div>
     
       <div class="weatherButtons">
              <button class="weatherBtn" id="btnFlood">
-              <img src="newIcons/flood.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Flood 
+              <img src="../newIcons/flood.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Flood 
             </button>
 
             <button class="weatherBtn" id="btnHurricane">
-              <img src="newIcons/hurricane.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Hurricane
+              <img src="../newIcons/hurricane.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Hurricane
             </button>
             
             <button class="weatherBtn" id="btnStorm">
-               <img src="newIcons/storm.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Storm
+               <img src="../newIcons/storm.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Storm
               </button>
 
              <button class="weatherBtn" id="btnBlizzard">
-               <img src="newIcons/blizzard.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Blizzard
+               <img src="../newIcons/blizzard.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Blizzard
               </button>
 
              <button class="weatherBtn" id="btnFreezing Rain">
-               <img src="newIcons/freezingRain.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Freezing Rain
+               <img src="../newIcons/freezingRain.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Freezing Rain
               </button>
 
              <button class="weatherBtn" id="btnHail">
-               <img src="newIcons/hail.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Hail
+               <img src="../newIcons/hail.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Hail
               </button>
 
              <button class="weatherBtn" id="btnRain">
-               <img src="newIcons/rain.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Rain
+               <img src="../newIcons/rain.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Rain
               </button>
 
              <button class="weatherBtn" id="btnSnow">
-               <img src="newIcons/snow.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Snow
+               <img src="../newIcons/snow.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Snow
               </button>
               
               <button class="weatherBtn" id="btnClearIncidents">Clear</button>
@@ -528,11 +528,11 @@
   let markerById = {};
 
   const resourceIcons = {
-    shelter: "newIcons/shelter.png",
-    food: "newIcons/foodBank.png",
-    police: "newIcons/police.png",
-    ambulance: "newIcons/ambulance.png",
-    towing: "newIcons/towing.png",
+    shelter: "../newIcons/shelter.png",
+    food: "../newIcons/foodBank.png",
+    police: "../newIcons/police.png",
+    ambulance: "../newIcons/ambulance.png",
+    towing: "../newIcons/towing.png",
   };
 
   const resourceMeta = {
@@ -579,14 +579,13 @@
   }
 
   function createResourceIcon(resource){
-    const iconPath = resourceIcons[resource.type] || "newIcons/incident.png"; 
+    const iconPath = resourceIcons[resource.type] || "../newIcons/incident.png"; 
     const safeStatus = (resource.status || "open").toLowerCase();
     return L.divIcon({
     className: "",
     iconSize: [34, 34],
     iconAnchor: [17, 17],
     popupAnchor: [0, -16],
-    // CHANGE: Use an <img> tag instead of raw text
     html: `<div class="resourceMarker ${resource.type} status-${safeStatus}" title="${resource.name}">
              <img src="${iconPath}" style="width:20px; height:20px;">
            </div>`
@@ -633,7 +632,7 @@
 
     contactList.innerHTML = emergencyResources.map((resource) => `
       <div class="contactCard">
-       <img src="${resourceIcons[resource.type] || 'newIcons/incident.png'}" style="width:16px; vertical-align:middle; margin-right:4px;">
+       <img src="${resourceIcons[resource.type] || '../newIcons/incident.png'}" style="width:16px; vertical-align:middle; margin-right:4px;">
         <div class="contactPhone">${resource.phone || "Phone unavailable"}</div>
         <div class="contactMeta">${resource.address || resource.city}</div>
         <div class="contactMeta">${resourceMetricLabel(resource)}</div>
@@ -653,7 +652,7 @@
 
     resourceDirectory.innerHTML = visibleResources.map((resource) => `
       <button class="contactCard directoryCardButton" type="button" data-resource-id="${resource.id}">
-        <img src="${resourceIcons[resource.type] || 'newIcons/incident.png'}" style="width:16px; vertical-align:middle; margin-right:4px;">
+        <img src="${resourceIcons[resource.type] || '../newIcons/incident.png'}" style="width:16px; vertical-align:middle; margin-right:4px;">
         <div class="contactMeta">${resource.address || resource.city}</div>
         <div class="contactMeta">Status: ${resource.status}</div>
         <div class="contactMeta">${resourceMetricLabel(resource)}</div>
@@ -768,12 +767,12 @@
     renderMarkers();
     renderOrgControls();
   };
-/* Continue Replacements -Weather Buttons: Flood, Hurricane, Storm, Blizzard, Freezing Rain, Hail, & Snow*/
+
 function addIncidentMarker(lat, lon, iconPath, statusText) {
   incidentsLayer.clearLayers();
   
   const incidentIcon = L.divIcon({
-    className: 'custom-incident-icon', // Optional: add a CSS class for styling
+    className: 'custom-incident-icon',
     html: `<img src="${iconPath}" style="width:30px; height:30px; filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));">`,
     iconSize: [30, 30],
     iconAnchor: [15, 15]
@@ -785,28 +784,28 @@ function addIncidentMarker(lat, lon, iconPath, statusText) {
 
 // Button Listeners
 document.getElementById("btnFlood").onclick = () => 
-  addIncidentMarker(36.95, -76.35, "newIcons/flood.png", "Flood");
+  addIncidentMarker(36.95, -76.35, "../newIcons/flood.png", "Flood");
 
 document.getElementById("btnHurricane").onclick = () => 
-  addIncidentMarker(36.90, -76.20, "newIcons/hurricane.png", "Hurricane");
+  addIncidentMarker(36.90, -76.20, "../newIcons/hurricane.png", "Hurricane");
 
 document.getElementById("btnStorm").onclick = () => 
-  addIncidentMarker(36.88, -76.32, "newIcons/storm.png", "Storm");
+  addIncidentMarker(36.88, -76.32, "../newIcons/storm.png", "Storm");
 
 document.getElementById("btnBlizzard").onclick = () => 
-  addIncidentMarker(37.00, -76.30, "newIcons/blizzard.png", "Blizzard");
+  addIncidentMarker(37.00, -76.30, "../newIcons/blizzard.png", "Blizzard");
 
 document.getElementById("btnFreezing Rain").onclick = () => 
-  addIncidentMarker(36.85, -76.10, "newIcons/freezingRain.png", "Freezing Rain");
+  addIncidentMarker(36.85, -76.10, "../newIcons/freezingRain.png", "Freezing Rain");
 
 document.getElementById("btnHail").onclick = () => 
-  addIncidentMarker(36.75, -76.25, "newIcons/hail.png", "Hail");
+  addIncidentMarker(36.75, -76.25, "../newIcons/hail.png", "Hail");
 
 document.getElementById("btnRain").onclick = () => 
-  addIncidentMarker(36.80, -76.05, "newIcons/rain.png", "Rain");
+  addIncidentMarker(36.80, -76.05, "../newIcons/rain.png", "Rain");
 
 document.getElementById("btnSnow").onclick = () => 
-  addIncidentMarker(36.92, -76.40, "newIcons/snow.png", "Snow");
+  addIncidentMarker(36.92, -76.40, "../newIcons/snow.png", "Snow");
 
 document.getElementById("btnClearIncidents").onclick = () => {
   incidentsLayer.clearLayers();
@@ -901,5 +900,3 @@ document.getElementById("btnClearIncidents").onclick = () => {
 
 </body>
 </html>
-
-
