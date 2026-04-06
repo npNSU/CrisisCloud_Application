@@ -1,4 +1,3 @@
-<!--New Changes: Implemented new Icons-->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -13,8 +12,11 @@
     crossorigin=""
   />
   <style>
+    /* LOOKUP: FRONTEND-STYLES-THEME
+       These variables define the main color system for dark and light mode.
+       The rest of the stylesheet reuses them so the UI can switch themes
+       without rewriting each component style individually. */
     /* ===== THEME VARIABLES ===== */
-  
     :root {
       --bg-body: #0b1220;
       --bg-card: #101a2e;
@@ -64,11 +66,32 @@
       position: sticky; top: 0; z-index: 10;
     }
 
+    /* LOOKUP: FRONTEND-STYLES-TOGGLE
+       This section styles the custom light/dark theme toggle in the header. */
     /* Theme Switcher Toggle */
     .theme-switch-wrapper {
       display: flex;
       align-items: center;
       gap: 8px;
+    }
+    .accessibility-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border: 1px solid var(--border-color);
+      border-radius: 999px;
+      background: var(--bg-input);
+      color: var(--text-main);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .accessibility-toggle input {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: var(--accent);
+      cursor: pointer;
     }
     .theme-switch {
       position: relative;
@@ -85,7 +108,6 @@
             transition: .4s;
             border-radius: 20px;
     }
-    
     .slider:before {
       position: absolute;
       content: "🌙";
@@ -107,6 +129,9 @@
       content: "☀️";
     }
 
+    /* LOOKUP: FRONTEND-STYLES-LAYOUT
+       These rules handle the main page layout, responsive card grid, map size,
+       buttons, and shared typography for the dashboard. */
     .row {
       display: flex;
       justify-content: space-between;
@@ -119,7 +144,7 @@
     h3 { margin: 0 0 8px; font-size: 14px; color: var(--text-main); }
     p { margin: 6px 0 0; color: var(--text-small); line-height: 1.35; }
 
-   button, select, input {
+    button, select, input {
       padding: 10px 14px;
       border-radius: 10px;
       border: 1px solid var(--border-color);
@@ -162,7 +187,7 @@
       border-radius: 14px;
       padding: 16px;
     }
-    
+
     #map {
       width: 100%;
       height: 420px;
@@ -200,6 +225,17 @@
       font-size: 13px;
     }
     .legendItem { display: flex; align-items: center; gap: 8px; }
+    .legendIcon,
+    .resourceLabelIcon {
+      width: 20px;
+      height: 20px;
+      object-fit: contain;
+      display: inline-block;
+      vertical-align: middle;
+    }
+    .resourceLabelIcon {
+      margin-right: 8px;
+    }
 
     .weatherTitle {
       margin-top: 12px;
@@ -207,11 +243,52 @@
       color: var(--text-small);
       font-weight: 700;
     }
+    .collapsibleSection {
+      margin-top: 12px;
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      background: var(--bg-input);
+      overflow: hidden;
+    }
+    .collapsibleSummary {
+      list-style: none;
+      cursor: pointer;
+      padding: 12px 14px;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-small);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      user-select: none;
+    }
+    .collapsibleSummary::-webkit-details-marker {
+      display: none;
+    }
+    .collapsibleSummary::after {
+      content: "+";
+      font-size: 18px;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .collapsibleSection[open] .collapsibleSummary::after {
+      content: "−";
+    }
+    .collapsibleBody {
+      padding: 0 12px 12px;
+    }
     .weatherBtn {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
       border-radius: 999px;
       padding: 9px 12px;
+    }
+    .weatherBtn img {
+      width: 18px;
+      height: 18px;
+      object-fit: contain;
+      margin-right: 6px;
+      vertical-align: middle;
     }
 
     .leaflet-control-attribution, .leaflet-control-scale {
@@ -220,6 +297,10 @@
       border: 1px solid var(--border-color) !important;
     }
 
+    /* LOOKUP: FRONTEND-STYLES-MAP-MARKERS
+       The resource marker classes control the custom Leaflet icons for shelters,
+       food banks, police, fire, and towing. Status classes add the colored glow
+       that visually shows open, limited, full, or busy conditions. */
     .resourceMarker {
       width: 34px;
       height: 34px;
@@ -236,13 +317,21 @@
     .resourceMarker.food { background: #ea580c; }
     .resourceMarker.police { background: #1d4ed8; }
     .resourceMarker.fire { background: #dc2626; }
+    .resourceMarker.hospital { background: #ef4444; }
     .resourceMarker.towing { background: #7c3aed; }
-    .resourceMarker.status-open { box-shadow: 0 0 0 4px rgba(34,197,94,0.28), 0 8px 16px rgba(0,0,0,0.25); }
-    .resourceMarker.status-available { box-shadow: 0 0 0 4px rgba(34,197,94,0.28), 0 8px 16px rgba(0,0,0,0.25); }
-    .resourceMarker.status-limited { box-shadow: 0 0 0 4px rgba(250,204,21,0.30), 0 8px 16px rgba(0,0,0,0.25); }
+    .resourceMarker.status-open { box-shadow: 0 0 0 5px rgba(21,128,61,0.55), 0 8px 16px rgba(0,0,0,0.25); }
+    .resourceMarker.status-available { box-shadow: 0 0 0 5px rgba(21,128,61,0.55), 0 8px 16px rgba(0,0,0,0.25); }
+    .resourceMarker.status-limited { box-shadow: 0 0 0 5px rgba(202,138,4,0.60), 0 8px 16px rgba(0,0,0,0.25); }
     .resourceMarker.status-full,
     .resourceMarker.status-closed,
-    .resourceMarker.status-busy { box-shadow: 0 0 0 4px rgba(244,63,94,0.30), 0 8px 16px rgba(0,0,0,0.25); }
+    .resourceMarker.status-busy { box-shadow: 0 0 0 5px rgba(185,28,28,0.60), 0 8px 16px rgba(0,0,0,0.25); }
+    .resourceMarkerImage,
+    .incidentMarkerImage {
+      width: 22px;
+      height: 22px;
+      object-fit: contain;
+      display: block;
+    }
 
     .backdrop {
       position: fixed;
@@ -276,6 +365,9 @@
       color: var(--text-small);
       font-size: 13px;
     }
+    /* LOOKUP: FRONTEND-STYLES-DATA-PANELS
+       These classes style the forecast cards and sidebar directory cards that
+       present weather, contacts, and resource details next to the map. */
     .forecastGrid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
@@ -337,6 +429,17 @@
       font-size: 12px;
       color: var(--text-small);
     }
+    .popupMeta {
+      color: var(--text-small);
+    }
+    .accessibility-strong .addressMeta,
+    .accessibility-strong .availabilityMeta,
+    .accessibility-strong .popupMeta {
+      font-weight: 800;
+      font-size: 14px;
+      color: var(--text-main);
+      letter-spacing: 0.01em;
+    }
     .directoryCardButton {
       width: 100%;
       text-align: left;
@@ -348,6 +451,9 @@
 
 <body>
 
+<!-- LOOKUP: FRONTEND-HEADER
+     This header contains the app title, theme switch, map recenter button,
+     and org login shortcut used throughout the demo. -->
 <header>
   <div class="row">
     <h1>☁️ CrisisCloud</h1>
@@ -356,6 +462,10 @@
         <label class="theme-switch" for="themeCheckbox">
           <input type="checkbox" id="themeCheckbox">
           <div class="slider"></div>
+        </label>
+        <label class="accessibility-toggle" for="boldTextToggle">
+          <input type="checkbox" id="boldTextToggle">
+          <span>Bold Details</span>
         </label>
       </div>
       <button class="ghost" id="btnAskLocation">Share Location</button>
@@ -367,68 +477,29 @@
 
 <main>
   <div class="grid">
+    <!-- LOOKUP: FRONTEND-PUBLIC-DASHBOARD
+         This section contains the public-facing map, legend, filters, incident
+         demo controls, and weather panels that update based on the current map center. -->
     <section class="card">
       <h2>Public Dashboard</h2>
       <p>Real-time shelter capacity, emergency services, and incident reports.</p>
 
-       <div class="legend">
-        <div class ="legendItem">
-          <img src ="../newIcons/shelter.png" style="width:20px; height:20px;">
-           <span>Shelter</span>
-
-        <img src ="../newIcons/foodBank.png" style="width:20px; height:20px;">
-           <span>Food Bank</span> 
-
-         <img src ="../newIcons/police.png" style="width:20px; height:20px;">
-           <span>Police</span> 
-
-         <img src ="../newIcons/towing.png" style="width:20px; height:20px;">
-           <span>Towing</span> 
-
-         <img src ="../newIcons/ambulance.png" style="width:20px; height:20px;">
-           <span>Ambulance</span> 
-        
-         <img src ="../newIcons/incident.png" style="width:20px; height:20px;">
-           <span>Incident</span> 
-          </div>
+      <div class="legend">
+        <div class="legendItem"><img class="legendIcon" src="/assets/icons/shelter.png" alt="Shelter"><span>Shelter</span></div>
+        <div class="legendItem"><img class="legendIcon" src="/assets/icons/foodBank.png" alt="Food Bank"><span>Food Bank</span></div>
+        <div class="legendItem"><img class="legendIcon" src="/assets/icons/police.png" alt="Police"><span>Police</span></div>
+        <div class="legendItem"><img class="legendIcon" src="/assets/icons/incident.png" alt="Fire"><span>Fire</span></div>
+        <div class="legendItem"><img class="legendIcon" src="/assets/icons/ambulance.png" alt="Hospital"><span>Hospital</span></div>
+        <div class="legendItem"><img class="legendIcon" src="/assets/icons/towing.png" alt="Towing"><span>Towing</span></div>
+        <div class="legendItem"><img class="legendIcon" src="/assets/icons/incident.png" alt="Incident"><span>Incident</span></div>
       </div>
-    
+
       <div class="weatherButtons">
-             <button class="weatherBtn" id="btnFlood">
-              <img src="../newIcons/flood.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Flood 
-            </button>
-
-            <button class="weatherBtn" id="btnHurricane">
-              <img src="../newIcons/hurricane.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Hurricane
-            </button>
-            
-            <button class="weatherBtn" id="btnStorm">
-               <img src="../newIcons/storm.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Storm
-              </button>
-
-             <button class="weatherBtn" id="btnBlizzard">
-               <img src="../newIcons/blizzard.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Blizzard
-              </button>
-
-             <button class="weatherBtn" id="btnFreezing Rain">
-               <img src="../newIcons/freezingRain.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Freezing Rain
-              </button>
-
-             <button class="weatherBtn" id="btnHail">
-               <img src="../newIcons/hail.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Hail
-              </button>
-
-             <button class="weatherBtn" id="btnRain">
-               <img src="../newIcons/rain.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Rain
-              </button>
-
-             <button class="weatherBtn" id="btnSnow">
-               <img src="../newIcons/snow.png" alt="" style="width:16px; vertical-align:middle; margin-right:4px;"> Snow
-              </button>
-              
-              <button class="weatherBtn" id="btnClearIncidents">Clear</button>
-            </div>
-          </div>
+        <button class="weatherBtn" id="btnFlood"><img src="/assets/icons/flood.png" alt="Flood">Flood</button>
+        <button class="weatherBtn" id="btnHurricane"><img src="/assets/icons/hurricane.png" alt="Hurricane">Hurricane</button>
+        <button class="weatherBtn" id="btnStorm"><img src="/assets/icons/storm.png" alt="Storm">Storm</button>
+        <button class="weatherBtn" id="btnClearIncidents">Clear</button>
+      </div>
 
       <div class="toolbar">
         <select id="filterType">
@@ -437,9 +508,17 @@
           <option value="food">Food Banks</option>
           <option value="police">Police</option>
           <option value="fire">Fire</option>
+          <option value="hospital">Hospitals</option>
           <option value="towing">Towing</option>
         </select>
-        <input id="search" placeholder="Search city..." />
+        <select id="cityFilter">
+          <option value="All">All</option>
+          <option value="Norfolk" selected>Norfolk</option>
+          <option value="Chesapeake">Chesapeake</option>
+          <option value="Portsmouth">Portsmouth</option>
+          <option value="Suffolk">Suffolk</option>
+          <option value="Virginia Beach">Virginia Beach</option>
+        </select>
         <button class="primary" id="btnRefresh">Refresh</button>
       </div>
 
@@ -460,6 +539,9 @@
       </div>
     </section>
 
+    <!-- LOOKUP: FRONTEND-ORG-SIDEBAR
+         This sidebar combines the org login flow with the emergency contact
+         directory and the shelter/food directory that can refocus the map. -->
     <aside class="card">
       <h2>Organization Portal</h2>
       <div id="orgLoggedOut">
@@ -467,15 +549,48 @@
         <button class="primary" style="margin-top:15px;" id="btnOpenLogin">Login to Update Status</button>
       </div>
 
-      <div class="weatherTitle">Emergency Contact Directory</div>
-      <div class="contactList" id="contactList">
-        <div class="contactCard">Contact information loading...</div>
-      </div>
+      <details class="collapsibleSection" open>
+        <summary class="collapsibleSummary">Emergency Contact Directory</summary>
+        <div class="collapsibleBody">
+          <div class="weatherTitle">Police Stations</div>
+          <div class="contactList" id="policeDirectory">
+            <div class="contactCard">Police information loading...</div>
+          </div>
 
-      <div class="weatherTitle">Shelter And Food Directory</div>
-      <div class="contactList" id="resourceDirectory">
-        <div class="contactCard">Shelter and food bank information loading...</div>
-      </div>
+          <div class="weatherTitle">Fire Stations</div>
+          <div class="contactList" id="fireDirectory">
+            <div class="contactCard">Fire station information loading...</div>
+          </div>
+
+          <div class="weatherTitle">Hospitals</div>
+          <div class="contactList" id="hospitalDirectory">
+            <div class="contactCard">Hospital information loading...</div>
+          </div>
+
+          <div class="weatherTitle">Towing Services</div>
+          <div class="contactList" id="towingDirectory">
+            <div class="contactCard">Towing information loading...</div>
+          </div>
+        </div>
+      </details>
+
+      <details class="collapsibleSection" open>
+        <summary class="collapsibleSummary">Storm Shelter Directory</summary>
+        <div class="collapsibleBody">
+          <div class="contactList" id="shelterDirectory">
+            <div class="contactCard">Storm shelter information loading...</div>
+          </div>
+        </div>
+      </details>
+
+      <details class="collapsibleSection" open>
+        <summary class="collapsibleSummary">Food Bank Directory</summary>
+        <div class="collapsibleBody">
+          <div class="contactList" id="foodDirectory">
+            <div class="contactCard">Food bank information loading...</div>
+          </div>
+        </div>
+      </details>
 
       <div id="orgPanel" style="display:none; margin-top:14px;">
         <div class="row">
@@ -489,6 +604,9 @@
   </div>
 </main>
 
+<!-- LOOKUP: FRONTEND-LOGIN-MODAL
+     This modal is the lightweight organization login UI used to open the
+     shared update controls without leaving the main dashboard. -->
 <div class="backdrop" id="loginBackdrop">
   <div class="modal">
     <div class="row"><h2>Login</h2><button class="ghost" id="btnCloseLogin">X</button></div>
@@ -503,15 +621,19 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
 <script>
+  // LOOKUP: FRONTEND-STATE
+  // This section defines the shared frontend state for resources, filters,
+  // login state, polling frequency, and key DOM references used throughout the page.
   const RESOURCE_POLL_MS = 5000;
   let resources = [];
   let loggedInResourceId = null;
   let activeFilter = "all";
-  let activeSearch = "";
+  let activeCity = "Norfolk";
 
   const themeCheckbox = document.getElementById("themeCheckbox");
   const filterType = document.getElementById("filterType");
-  const searchInput = document.getElementById("search");
+  const cityFilter = document.getElementById("cityFilter");
+  const mapElement = document.getElementById("map");
   const loginBackdrop = document.getElementById("loginBackdrop");
   const loginOrg = document.getElementById("loginOrg");
   const orgLoggedOut = document.getElementById("orgLoggedOut");
@@ -522,36 +644,56 @@
   const weatherBox = document.getElementById("weatherBox");
   const alertsBox = document.getElementById("alertsBox");
   const forecastGrid = document.getElementById("forecastGrid");
-  const contactList = document.getElementById("contactList");
-  const resourceDirectory = document.getElementById("resourceDirectory");
+  const policeDirectory = document.getElementById("policeDirectory");
+  const fireDirectory = document.getElementById("fireDirectory");
+  const hospitalDirectory = document.getElementById("hospitalDirectory");
+  const towingDirectory = document.getElementById("towingDirectory");
+  const shelterDirectory = document.getElementById("shelterDirectory");
+  const foodDirectory = document.getElementById("foodDirectory");
+  const boldTextToggle = document.getElementById("boldTextToggle");
   let mapTileLayer;
   let markerById = {};
-
   const resourceIcons = {
-    shelter: "../newIcons/shelter.png",
-    food: "../newIcons/foodBank.png",
-    police: "../newIcons/police.png",
-    ambulance: "../newIcons/ambulance.png",
-    towing: "../newIcons/towing.png",
+    shelter: "/assets/icons/shelter.png",
+    food: "/assets/icons/foodBank.png",
+    police: "/assets/icons/police.png",
+    fire: "/assets/icons/incident.png",
+    hospital: "/assets/icons/ambulance.png",
+    towing: "/assets/icons/towing.png",
+    incident: "/assets/icons/incident.png",
+    flood: "/assets/icons/flood.png",
+    hurricane: "/assets/icons/hurricane.png",
+    storm: "/assets/icons/storm.png"
   };
-
   const resourceMeta = {
     shelter: { countField: "spaceLeft", countLabel: "Beds left", statusOptions: ["open", "limited", "full"] },
     food: { countField: "foodLeft", countLabel: "Meals available", statusOptions: ["open", "limited", "closed"] },
     police: { countField: "unitsAvailable", countLabel: "Units available", statusOptions: ["available", "limited", "busy"] },
     fire: { countField: "trucksAvailable", countLabel: "Fire trucks available", statusOptions: ["available", "limited", "busy"] },
+    hospital: { countField: "bedsAvailable", countLabel: "Beds available", statusOptions: ["available", "limited", "full"] },
     towing: { countField: "towTrucksAvailable", countLabel: "Tow trucks available", statusOptions: ["available", "limited", "busy"] }
   };
 
- function updateMapTheme(isLight) {
-    if (mapTileLayer) map.removeLayer(mapTileLayer);
-    const url = "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png";
-
-    mapTileLayer = L.tileLayer(url, {
-      attribution: "&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> contributors"
-    }).addTo(map);
+  // LOOKUP: FRONTEND-THEME-LOGIC
+  // These functions and listeners switch the page between light and dark mode,
+  // remember the user's theme choice, and swap the underlying tile layer so the
+  // map matches the selected theme.
+  function updateAccessibilityText(isStrong) {
+    document.body.classList.toggle("accessibility-strong", isStrong);
+    localStorage.setItem("crisisAccessibilityStrong", isStrong ? "on" : "off");
   }
 
+  function updateMapTheme(isLight) {
+    if (mapTileLayer) map.removeLayer(mapTileLayer);
+
+    const url = isLight
+      ? "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
+
+    mapTileLayer = L.tileLayer(url, {
+      attribution: "&copy; CartoDB / OpenStreetMap"
+    }).addTo(map);
+  }
 
   themeCheckbox.addEventListener("change", () => {
     const isLight = themeCheckbox.checked;
@@ -560,47 +702,76 @@
     localStorage.setItem("crisisTheme", isLight ? "light" : "dark");
   });
 
+  boldTextToggle.addEventListener("change", () => {
+    updateAccessibilityText(boldTextToggle.checked);
+  });
+
   const savedTheme = localStorage.getItem("crisisTheme");
   if (savedTheme === "light") {
     themeCheckbox.checked = true;
     document.documentElement.setAttribute("data-theme", "light");
   }
+  const savedAccessibility = localStorage.getItem("crisisAccessibilityStrong");
+  if (savedAccessibility === "on") {
+    boldTextToggle.checked = true;
+    updateAccessibilityText(true);
+  }
 
   const map = L.map("map").setView([36.9, -76.3], 10);
   updateMapTheme(savedTheme === "light");
 
+  // LOOKUP: FRONTEND-MAP-LAYERS
+  // These Leaflet layers separate persistent resource markers from temporary
+  // weather incident demo markers so each can be refreshed independently.
   const markersLayer = L.layerGroup().addTo(map);
   const incidentsLayer = L.layerGroup().addTo(map);
 
+  // LOOKUP: FRONTEND-RESOURCE-HELPERS
+  // These helpers translate backend resource data into readable labels,
+  // custom icons, and filter logic used by the map and sidebar directories.
   function resourceMetricLabel(resource) {
     const meta = resourceMeta[resource.type];
     if (!meta) return "";
     return `${meta.countLabel}: ${resource[meta.countField] ?? 0}`;
   }
 
-  function createResourceIcon(resource){
-    const iconPath = resourceIcons[resource.type] || "../newIcons/incident.png"; 
+  function iconImageHtml(url, alt, className = "resourceLabelIcon") {
+    return `<img class="${className}" src="${url}" alt="${alt}">`;
+  }
+
+  function createResourceIcon(resource) {
+    const iconUrl = resourceIcons[resource.type] || resourceIcons.incident;
     const safeStatus = (resource.status || "open").toLowerCase();
     return L.divIcon({
-    className: "",
-    iconSize: [34, 34],
-    iconAnchor: [17, 17],
-    popupAnchor: [0, -16],
-    html: `<div class="resourceMarker ${resource.type} status-${safeStatus}" title="${resource.name}">
-             <img src="${iconPath}" style="width:20px; height:20px;">
-           </div>`
-  });
-}
+      className: "",
+      iconSize: [34, 34],
+      iconAnchor: [17, 17],
+      popupAnchor: [0, -16],
+      html: `<div class="resourceMarker ${resource.type} status-${safeStatus}" title="${resource.name}"><img class="resourceMarkerImage" src="${iconUrl}" alt="${resource.name}"></div>`
+    });
+  }
+
+  function createIncidentIcon(iconKey) {
+    return L.divIcon({
+      className: "",
+      iconSize: [34, 34],
+      iconAnchor: [17, 17],
+      popupAnchor: [0, -16],
+      html: `<div class="resourceMarker status-open" title="${iconKey} incident"><img class="incidentMarkerImage" src="${resourceIcons[iconKey] || resourceIcons.incident}" alt="${iconKey}"></div>`
+    });
+  }
 
   function filteredResources() {
     return resources.filter((resource) => {
       const matchesType = activeFilter === "all" || resource.type === activeFilter;
-      const searchTarget = `${resource.name} ${resource.city}`.toLowerCase();
-      const matchesSearch = !activeSearch || searchTarget.includes(activeSearch);
-      return matchesType && matchesSearch;
+      const matchesCity = activeCity === "All" || !activeCity || (resource.city || "").toLowerCase().startsWith(activeCity.toLowerCase());
+      return matchesType && matchesCity;
     });
   }
 
+  // LOOKUP: FRONTEND-MAP-RENDER
+  // This renderer clears the existing map markers and rebuilds them from the
+  // latest shared backend data so status changes appear live on the dashboard.
   function renderMarkers() {
     markersLayer.clearLayers();
     markerById = {};
@@ -608,58 +779,98 @@
       const marker = L.marker([resource.lat, resource.lon], { icon: createResourceIcon(resource) })
         .addTo(markersLayer)
         .bindPopup(
-          `<b>${resource.name}</b><br>${resource.address || resource.city}<br>Status: ${resource.status}<br>${resourceMetricLabel(resource)}<br>Phone: ${resource.phone || "—"}`
+          `<b>${resource.name}</b><br><span class="popupMeta addressMeta">${resource.address || resource.city}</span><br><span class="popupMeta">Status: ${resource.status}</span><br><span class="popupMeta availabilityMeta">${resourceMetricLabel(resource)}</span><br><span class="popupMeta">Phone: ${resource.phone || "—"}</span>`
         );
       markerById[resource.id] = marker;
     });
   }
 
+  // LOOKUP: FRONTEND-SIDEBAR-DIRECTORIES
+  // These renderers build the login dropdown plus the emergency contact and
+  // shelter/food directory cards shown in the right-side panel.
   function renderLoginOptions() {
     loginOrg.innerHTML = resources.map((resource) =>
       `<option value="${resource.id}">${resource.name}</option>`
     ).join("");
   }
 
-  function renderContactDirectory() {
-    const emergencyResources = resources.filter((resource) =>
-      ["police", "fire", "towing"].includes(resource.type)
-    );
-
-    if (emergencyResources.length === 0) {
-      contactList.innerHTML = `<div class="contactCard">No emergency contact information available.</div>`;
+  function renderEmergencyCards(targetElement, resourcesForDirectory, emptyMessage) {
+    if (resourcesForDirectory.length === 0) {
+      targetElement.innerHTML = `<div class="contactCard">${emptyMessage}</div>`;
       return;
     }
 
-    contactList.innerHTML = emergencyResources.map((resource) => `
-      <div class="contactCard">
-       <img src="${resourceIcons[resource.type] || '../newIcons/incident.png'}" style="width:16px; vertical-align:middle; margin-right:4px;">
-        <div class="contactPhone">${resource.phone || "Phone unavailable"}</div>
-        <div class="contactMeta">${resource.address || resource.city}</div>
-        <div class="contactMeta">${resourceMetricLabel(resource)}</div>
-      </div>
-    `).join("");
-  }
-
-  function renderResourceDirectory() {
-    const visibleResources = resources.filter((resource) =>
-      ["shelter", "food"].includes(resource.type)
-    );
-
-    if (visibleResources.length === 0) {
-      resourceDirectory.innerHTML = `<div class="contactCard">No shelter or food bank information available.</div>`;
-      return;
-    }
-
-    resourceDirectory.innerHTML = visibleResources.map((resource) => `
+    targetElement.innerHTML = resourcesForDirectory.map((resource) => `
       <button class="contactCard directoryCardButton" type="button" data-resource-id="${resource.id}">
-        <img src="${resourceIcons[resource.type] || '../newIcons/incident.png'}" style="width:16px; vertical-align:middle; margin-right:4px;">
-        <div class="contactMeta">${resource.address || resource.city}</div>
-        <div class="contactMeta">Status: ${resource.status}</div>
-        <div class="contactMeta">${resourceMetricLabel(resource)}</div>
+        <div class="contactTitle">${iconImageHtml(resourceIcons[resource.type] || resourceIcons.incident, resource.name)}${resource.name}</div>
+        <div class="contactPhone">${resource.phone || "Phone unavailable"}</div>
+        <div class="contactMeta addressMeta">${resource.address || resource.city}</div>
+        <div class="contactMeta availabilityMeta">${resourceMetricLabel(resource)}</div>
       </button>
     `).join("");
   }
 
+  function renderContactDirectory() {
+    const visibleResources = filteredResources();
+    renderEmergencyCards(
+      policeDirectory,
+      visibleResources.filter((resource) => resource.type === "police"),
+      "No police station information available."
+    );
+    renderEmergencyCards(
+      fireDirectory,
+      visibleResources.filter((resource) => resource.type === "fire"),
+      "No fire station information available."
+    );
+    renderEmergencyCards(
+      hospitalDirectory,
+      visibleResources.filter((resource) => resource.type === "hospital"),
+      "No hospital information available."
+    );
+    renderEmergencyCards(
+      towingDirectory,
+      visibleResources.filter((resource) => resource.type === "towing"),
+      "No towing information available."
+    );
+  }
+
+  function renderDirectoryCards(targetElement, resourcesForDirectory, emptyMessage) {
+    if (resourcesForDirectory.length === 0) {
+      targetElement.innerHTML = `<div class="contactCard">${emptyMessage}</div>`;
+      return;
+    }
+
+    targetElement.innerHTML = resourcesForDirectory.map((resource) => `
+      <button class="contactCard directoryCardButton" type="button" data-resource-id="${resource.id}">
+        <div class="contactTitle">${iconImageHtml(resourceIcons[resource.type] || resourceIcons.incident, resource.name)}${resource.name}</div>
+        <div class="contactMeta addressMeta">${resource.address || resource.city}</div>
+        <div class="contactMeta">Status: ${resource.status}</div>
+        <div class="contactMeta availabilityMeta">${resourceMetricLabel(resource)}</div>
+      </button>
+    `).join("");
+  }
+
+  function renderShelterDirectory() {
+    const shelters = filteredResources().filter((resource) => resource.type === "shelter");
+    renderDirectoryCards(
+      shelterDirectory,
+      shelters,
+      "No storm shelter information available."
+    );
+  }
+
+  function renderFoodDirectory() {
+    const foodBanks = filteredResources().filter((resource) => resource.type === "food");
+    renderDirectoryCards(
+      foodDirectory,
+      foodBanks,
+      "No food bank information available."
+    );
+  }
+
+  // LOOKUP: FRONTEND-MAP-FOCUS
+  // Clicking a shelter or food card in the sidebar runs this helper, which makes
+  // sure the marker is visible, moves the map to that location, and opens its popup.
   function focusResourceOnMap(resourceId) {
     const resource = resources.find((item) => item.id === resourceId);
     if (!resource) return;
@@ -669,6 +880,7 @@
       filterType.value = "all";
       renderMarkers();
     }
+    mapElement.scrollIntoView({ behavior: "smooth", block: "start" });
     map.setView([resource.lat, resource.lon], 13);
     const marker = markerById[resourceId];
     if (marker) {
@@ -676,6 +888,9 @@
     }
   }
 
+  // LOOKUP: FRONTEND-ORG-CONTROLS
+  // This function builds the editable organization panel for whichever resource
+  // is currently logged in, including status, capacity, and phone fields.
   function renderOrgControls() {
     const resource = resources.find((item) => item.id === loggedInResourceId);
     if (!resource) return;
@@ -702,6 +917,9 @@
     `;
   }
 
+  // LOOKUP: FRONTEND-RESOURCE-FETCH
+  // This fetch pulls the latest shared resource data from Flask, then refreshes
+  // the login dropdown, sidebar directories, map markers, and org panel state.
   async function loadResources() {
     const res = await fetch("/api/resources");
     if (!res.ok) throw new Error("Unable to load resources");
@@ -711,13 +929,17 @@
     renderLoginOptions();
     renderContactDirectory();
     renderMarkers();
-    renderResourceDirectory();
+    renderShelterDirectory();
+    renderFoodDirectory();
 
     if (loggedInResourceId && resources.some((item) => item.id === loggedInResourceId)) {
       renderOrgControls();
     }
   }
 
+  // LOOKUP: FRONTEND-LOGIN-ACTIONS
+  // These click handlers open and close the login modal, switch the org panel on,
+  // and reset the sidebar back to logged-out mode when a user logs out.
   document.getElementById("btnOpenLogin").onclick = () => loginBackdrop.style.display = "flex";
   document.getElementById("btnLogin").onclick = () => loginBackdrop.style.display = "flex";
   document.getElementById("btnCloseLogin").onclick = () => loginBackdrop.style.display = "none";
@@ -740,6 +962,9 @@
     orgPanel.style.display = "none";
   };
 
+  // LOOKUP: FRONTEND-ORG-SAVE
+  // Saving an org update sends the edited status, contact number, and capacity
+  // back to the Flask backend so every open dashboard sees the shared changes.
   document.getElementById("btnSaveOrgUpdate").onclick = async () => {
     const resource = resources.find((item) => item.id === loggedInResourceId);
     if (!resource) return;
@@ -768,51 +993,35 @@
     renderOrgControls();
   };
 
-function addIncidentMarker(lat, lon, iconPath, statusText) {
-  incidentsLayer.clearLayers();
-  
-  const incidentIcon = L.divIcon({
-    className: 'custom-incident-icon',
-    html: `<img src="${iconPath}" style="width:30px; height:30px; filter: drop-shadow(0 0 4px rgba(0,0,0,0.5));">`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15]
-  });
+  // LOOKUP: FRONTEND-INCIDENT-DEMOS
+  // These buttons add and clear sample incident markers so the team can demo
+  // flood, hurricane, and storm reports without a separate incident backend.
+  document.getElementById("btnFlood").onclick = () => {
+    incidentsLayer.clearLayers();
+    L.marker([36.95, -76.35], { icon: createIncidentIcon("flood") }).addTo(incidentsLayer);
+    document.getElementById("incidentStatus").textContent = "Incidents: 1 Flood reported";
+  };
 
-  L.marker([lat, lon], { icon: incidentIcon }).addTo(incidentsLayer);
-  document.getElementById("incidentStatus").textContent = `Incidents: 1 ${statusText} reported`;
-}
+  document.getElementById("btnHurricane").onclick = () => {
+    incidentsLayer.clearLayers();
+    L.marker([36.90, -76.20], { icon: createIncidentIcon("hurricane") }).addTo(incidentsLayer);
+    document.getElementById("incidentStatus").textContent = "Incidents: 1 Hurricane warning marker";
+  };
 
-// Button Listeners
-document.getElementById("btnFlood").onclick = () => 
-  addIncidentMarker(36.95, -76.35, "../newIcons/flood.png", "Flood");
+  document.getElementById("btnStorm").onclick = () => {
+    incidentsLayer.clearLayers();
+    L.marker([36.88, -76.32], { icon: createIncidentIcon("storm") }).addTo(incidentsLayer);
+    document.getElementById("incidentStatus").textContent = "Incidents: 1 Severe storm marker";
+  };
 
-document.getElementById("btnHurricane").onclick = () => 
-  addIncidentMarker(36.90, -76.20, "../newIcons/hurricane.png", "Hurricane");
+  document.getElementById("btnClearIncidents").onclick = () => {
+    incidentsLayer.clearLayers();
+    document.getElementById("incidentStatus").textContent = "Incidents: none";
+  };
 
-document.getElementById("btnStorm").onclick = () => 
-  addIncidentMarker(36.88, -76.32, "../newIcons/storm.png", "Storm");
-
-document.getElementById("btnBlizzard").onclick = () => 
-  addIncidentMarker(37.00, -76.30, "../newIcons/blizzard.png", "Blizzard");
-
-document.getElementById("btnFreezing Rain").onclick = () => 
-  addIncidentMarker(36.85, -76.10, "../newIcons/freezingRain.png", "Freezing Rain");
-
-document.getElementById("btnHail").onclick = () => 
-  addIncidentMarker(36.75, -76.25, "../newIcons/hail.png", "Hail");
-
-document.getElementById("btnRain").onclick = () => 
-  addIncidentMarker(36.80, -76.05, "../newIcons/rain.png", "Rain");
-
-document.getElementById("btnSnow").onclick = () => 
-  addIncidentMarker(36.92, -76.40, "../newIcons/snow.png", "Snow");
-
-document.getElementById("btnClearIncidents").onclick = () => {
-  incidentsLayer.clearLayers();
-  document.getElementById("incidentStatus").textContent = "Incidents: none";
-};
- 
-
+  // LOOKUP: FRONTEND-WEATHER-REFRESH
+  // This function requests live weather, alerts, and weekly forecast data from
+  // the backend for the current map center and updates the dashboard panels.
   async function refreshWeatherForMapCenter() {
     const c = map.getCenter();
     const lat = c.lat.toFixed(4);
@@ -860,6 +1069,9 @@ document.getElementById("btnClearIncidents").onclick = () => {
     }
   }
 
+  // LOOKUP: FRONTEND-UI-EVENTS
+  // These listeners handle manual refresh, filter changes, search input, and
+  // sidebar card clicks that move the map to a selected resource.
   document.getElementById("btnRefresh").onclick = () => {
     loadResources().catch(() => {
       locStatus.textContent = "Resource feed unavailable";
@@ -872,17 +1084,53 @@ document.getElementById("btnClearIncidents").onclick = () => {
     renderMarkers();
   };
 
-  searchInput.oninput = (event) => {
-    activeSearch = event.target.value.trim().toLowerCase();
+  cityFilter.onchange = (event) => {
+    activeCity = event.target.value;
+    renderContactDirectory();
+    renderShelterDirectory();
+    renderFoodDirectory();
     renderMarkers();
   };
 
-  resourceDirectory.onclick = (event) => {
+  shelterDirectory.onclick = (event) => {
     const button = event.target.closest("[data-resource-id]");
     if (!button) return;
     focusResourceOnMap(button.getAttribute("data-resource-id"));
   };
 
+  foodDirectory.onclick = (event) => {
+    const button = event.target.closest("[data-resource-id]");
+    if (!button) return;
+    focusResourceOnMap(button.getAttribute("data-resource-id"));
+  };
+
+  policeDirectory.onclick = (event) => {
+    const button = event.target.closest("[data-resource-id]");
+    if (!button) return;
+    focusResourceOnMap(button.getAttribute("data-resource-id"));
+  };
+
+  fireDirectory.onclick = (event) => {
+    const button = event.target.closest("[data-resource-id]");
+    if (!button) return;
+    focusResourceOnMap(button.getAttribute("data-resource-id"));
+  };
+
+  hospitalDirectory.onclick = (event) => {
+    const button = event.target.closest("[data-resource-id]");
+    if (!button) return;
+    focusResourceOnMap(button.getAttribute("data-resource-id"));
+  };
+
+  towingDirectory.onclick = (event) => {
+    const button = event.target.closest("[data-resource-id]");
+    if (!button) return;
+    focusResourceOnMap(button.getAttribute("data-resource-id"));
+  };
+
+  // LOOKUP: FRONTEND-APP-START
+  // This startup sequence loads the initial shared resources, fetches weather
+  // for the default map center, and begins polling so the demo stays updated.
   loadResources()
     .then(() => {
       locStatus.textContent = "Map centered on Hampton Roads • shared resource feed live";
@@ -900,3 +1148,4 @@ document.getElementById("btnClearIncidents").onclick = () => {
 
 </body>
 </html>
+
