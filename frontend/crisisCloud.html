@@ -277,6 +277,20 @@
     .collapsibleBody {
       padding: 0 12px 12px;
     }
+    .nestedCollapsible {
+      margin-top: 10px;
+      border-radius: 10px;
+    }
+    .nestedCollapsible .collapsibleSummary {
+      padding: 10px 12px;
+      font-size: 12px;
+    }
+    .nestedCollapsible .collapsibleBody {
+      padding: 0 10px 10px;
+    }
+    .nestedCollapsible .weatherTitle {
+      margin-top: 0;
+    }
     .weatherBtn {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
@@ -552,25 +566,41 @@
       <details class="collapsibleSection" open>
         <summary class="collapsibleSummary">Emergency Contact Directory</summary>
         <div class="collapsibleBody">
-          <div class="weatherTitle">Police Stations</div>
-          <div class="contactList" id="policeDirectory">
-            <div class="contactCard">Police information loading...</div>
-          </div>
+          <details class="collapsibleSection nestedCollapsible" open>
+            <summary class="collapsibleSummary">Police Stations</summary>
+            <div class="collapsibleBody">
+              <div class="contactList" id="policeDirectory">
+                <div class="contactCard">Police information loading...</div>
+              </div>
+            </div>
+          </details>
 
-          <div class="weatherTitle">Fire Stations</div>
-          <div class="contactList" id="fireDirectory">
-            <div class="contactCard">Fire station information loading...</div>
-          </div>
+          <details class="collapsibleSection nestedCollapsible" open>
+            <summary class="collapsibleSummary">Fire Stations</summary>
+            <div class="collapsibleBody">
+              <div class="contactList" id="fireDirectory">
+                <div class="contactCard">Fire station information loading...</div>
+              </div>
+            </div>
+          </details>
 
-          <div class="weatherTitle">Hospitals</div>
-          <div class="contactList" id="hospitalDirectory">
-            <div class="contactCard">Hospital information loading...</div>
-          </div>
+          <details class="collapsibleSection nestedCollapsible" open>
+            <summary class="collapsibleSummary">Hospitals</summary>
+            <div class="collapsibleBody">
+              <div class="contactList" id="hospitalDirectory">
+                <div class="contactCard">Hospital information loading...</div>
+              </div>
+            </div>
+          </details>
 
-          <div class="weatherTitle">Towing Services</div>
-          <div class="contactList" id="towingDirectory">
-            <div class="contactCard">Towing information loading...</div>
-          </div>
+          <details class="collapsibleSection nestedCollapsible" open>
+            <summary class="collapsibleSummary">Towing Services</summary>
+            <div class="collapsibleBody">
+              <div class="contactList" id="towingDirectory">
+                <div class="contactCard">Towing information loading...</div>
+              </div>
+            </div>
+          </details>
         </div>
       </details>
 
@@ -1148,4 +1178,5 @@
 
 </body>
 </html>
+
 
