@@ -1,28 +1,32 @@
-# CrisisCloud (Flask + Leaflet + NWS Weather API)
+# CrisisCloud (Flask + Leaflet + SQLite + NWS Weather API)
 
 CrisisCloud is a Flask web application that serves a Leaflet-based frontend and pulls live weather, weekly forecast data, and active alerts from the National Weather Service (`weather.gov` / `api.weather.gov`) based on the current map center.
 
-This version of the application does not use a database. Resource data is stored in the Python backend as shared in-memory demo data, and weather data is retrieved live from the National Weather Service API.
+This version of the application uses a local SQLite database file named `crisiscloud.db` to store shelters, food banks, police stations, fire stations, hospitals, and towing services. Weather data is still retrieved live from the National Weather Service API.
 
 ## Current Features
 
-- Live map interface built with Leaflet
-- Real-time weather and active alerts from the National Weather Service
-- Weekly forecast display for the current Hampton Roads map area
-- Shared backend resource feed for:
-  - Storm shelters
-  - Food banks
-  - Police departments
-  - Fire services
-  - Towing services
-- Organization login panel for updating shared resource status during demos
-- Sidebar directories for:
-  - Emergency contacts
-  - Shelter and food bank listings
-- Three manually placed real shelter locations currently loaded in the backend:
-  - Blair Middle School Shelter
-  - Granby High School Shelter
-  - Norview High School Shelter
+- Live Leaflet map with custom resource icons
+- Live weather, alerts, and weekly forecast from the National Weather Service
+- SQLite-backed shared resource data
+- Real-world locations for shelters, food banks, police, fire, hospitals, and towing services
+- City filtering for:
+  - All
+  - Norfolk
+  - Chesapeake
+  - Portsmouth
+  - Suffolk
+  - Virginia Beach
+- Organization login panel for updating resource status, phone number, and availability
+- Emergency Contact Directory split into:
+  - Police Stations
+  - Fire Stations
+  - Hospitals
+  - Towing Services
+- Separate Storm Shelter Directory and Food Bank Directory
+- Collapsible directory sections
+- Click-to-focus behavior that scrolls to the map and shows the selected location
+- Local network hosting support for two-computer demos
 
 ## Prerequisites
 
@@ -38,8 +42,11 @@ CloudCrisis_Backend/
 ├── .env
 ├── README.md
 ├── crisisCloudBackend.py
+├── crisiscloud.db
 └── templates/
-    └── crisisCloud.html
+    ├── crisisCloud.html
+    └── CrisisCloud_Application/
+        └── newIcons/
 ```
 
 ## Install Dependencies
@@ -62,6 +69,26 @@ This User-Agent is required by the National Weather Service.
 
 Do not place the `.env` file inside the `templates` folder.
 
+## Database File
+
+The application now uses this SQLite database file:
+
+```text
+C:\Users\brand\OneDrive\Documents\CloudCrisis_Backend\crisiscloud.db
+```
+
+## What Teammates Need
+
+If a teammate wants to run the app and see the newest shelters, food banks, police stations, fire stations, hospitals, and towing services, they should have:
+
+- `crisisCloudBackend.py`
+- `crisiscloud.db`
+- `.env`
+- `templates/crisisCloud.html`
+- `templates/CrisisCloud_Application/newIcons/`
+
+If a teammate does not have the latest `crisiscloud.db`, they can still run the site, but they may not see the newest city data that has already been added to the database.
+
 ## Run The Website
 
 1. Open a terminal.
@@ -83,6 +110,29 @@ python .\crisisCloudBackend.py
 http://127.0.0.1:5000/
 ```
 
+## Run Across Two Computers On The Same Network
+
+The Flask app is configured to listen on the local network.
+
+When you start the app, the terminal should show something like:
+
+```text
+Running on http://127.0.0.1:5000
+Running on http://192.168.x.x:5000
+```
+
+To test on a second computer:
+
+1. Keep the app running on the host computer.
+2. Make sure both computers are on the same Wi-Fi or local network.
+3. On the second computer, open the network address shown by Flask, for example:
+
+```text
+http://192.168.0.159:5000
+```
+
+Both computers will then connect to the same running backend and shared `crisiscloud.db` file.
+
 ## Optional: Use a Virtual Environment
 
 If the team wants isolated dependencies:
@@ -102,25 +152,34 @@ You can test the live weather endpoint directly in a browser:
 http://127.0.0.1:5000/api/weather/live?lat=36.9&lon=-76.3
 ```
 
-## How Shared Resource Data Works
+## How Resource Data Works Now
 
-- The app currently stores shelter, food bank, police, fire, and towing entries directly inside `crisisCloudBackend.py`.
-- These entries are served by:
+- The app serves resource data through:
   - `GET /api/resources`
   - `POST /api/resources/<resource_id>`
-- Updates made through the Organization Portal are shared across open browser tabs while the Flask app is running.
-- Because this is in-memory data, restarting the Flask server resets resources back to the values in `crisisCloudBackend.py`.
+- The frontend polls the backend so updates can appear after refresh or during the demo polling cycle.
+- Resource updates are now stored in SQLite, so they persist after restarting the app.
+- The backend will seed the database automatically if the database starts empty.
 
-## Manual Shelter Coordinates
+## How To Share The Latest Changes With The Team
 
-The current real shelter locations are manually stored in `crisisCloudBackend.py` using known latitude and longitude values.
+The easiest way is to share the latest version of:
 
-To add more real shelters later:
+```text
+crisiscloud.db
+```
 
-1. Find the school or shelter address.
-2. Convert the address to latitude and longitude.
-3. Add a new shelter entry in `crisisCloudBackend.py`.
-4. Restart the Flask server.
+If a teammate replaces their local `crisiscloud.db` with the newest one, they will see the latest city data the next time they run the app.
+
+## Adding More Real Locations
+
+To add more real locations later:
+
+1. Get the real address.
+2. Find the latitude and longitude.
+3. Add the record to the backend seed list in `crisisCloudBackend.py`.
+4. Insert or update the record in `crisiscloud.db`.
+5. Restart the app or refresh the page.
 
 ## Common Issues
 
@@ -144,15 +203,25 @@ return render_template("crisisCloud.html")
 - Keep it in the project root, not in `templates`
 - Restart Flask after editing it
 
-### Resource Updates Reset After Restart
+### Database Looks Out Of Date
 
-This is expected in the current version. Resource updates are stored in memory only and are reset whenever the Flask server restarts.
+If a teammate is missing newer city records, make sure they have the latest copy of:
+
+```text
+crisiscloud.db
+```
+
+### Second Computer Cannot Connect
+
+- Confirm both computers are on the same network
+- Confirm the host computer is still running Flask
+- Confirm Windows Firewall allows Python on private networks
+- Use the host machine's network URL shown in the Flask terminal output
 
 ## Notes For The Team
 
 - This application currently uses live weather data from the National Weather Service.
-- It does not use a database yet.
-- Shelter and emergency resource data are currently managed in the backend Python file.
-- Three shelter markers are now based on manually entered real-world coordinates.
-- If the team later wants permanent persistence, move the resource data into JSON files or a database.
+- Resource data is stored in a local SQLite database.
+- The frontend and API are designed so the site still behaves the same while the database grows.
+- The easiest way to keep teammates synced is to share both the latest code and the latest `crisiscloud.db` file.
 
