@@ -1,118 +1,106 @@
 import os
+import sqlite3
 from copy import deepcopy
 import requests
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 from dotenv import load_dotenv
 
+# LOOKUP: BACKEND-SETUP
+# This section loads environment variables, creates the Flask app, and defines the
+# shared constants used across the backend. The NWS values are kept here so the
+# weather endpoints can reuse one base URL and one configurable User-Agent.
 load_dotenv()
 
 app = Flask(__name__)
+ICON_DIRECTORY = os.path.join(app.root_path, "templates", "CrisisCloud_Application", "newIcons")
+DATABASE_PATH = os.path.join(app.root_path, "crisiscloud.db")
 
 NWS_BASE = "https://api.weather.gov"
 NWS_UA = os.getenv("NWS_USER_AGENT", "CrisisCloud/1.0 (demo@example.com)")
 
-DEMO_RESOURCES = [
-    {
-        "id": "sh_blair",
-        "type": "shelter",
-        "name": "Blair Middle School Shelter",
-        "city": "Norfolk, VA",
-        "address": "730 Spotswood Avenue, Norfolk, VA 23517",
-        "lat": 36.866306,
-        "lon": -76.292577,
-        "status": "open",
-        "spaceLeft": 120,
-        "phone": "(757) 628-2400",
-    },
-    {
-        "id": "sh_granby",
-        "type": "shelter",
-        "name": "Granby High School Shelter",
-        "city": "Norfolk, VA",
-        "address": "7101 Granby Street, Norfolk, VA 23505",
-        "lat": 36.907194,
-        "lon": -76.277139,
-        "status": "limited",
-        "spaceLeft": 85,
-        "phone": "(757) 451-4110",
-    },
-    {
-        "id": "sh_norview_high",
-        "type": "shelter",
-        "name": "Norview High School Shelter",
-        "city": "Norfolk, VA",
-        "address": "6501 Chesapeake Blvd, Norfolk, VA 23513",
-        "lat": 36.900139,
-        "lon": -76.240306,
-        "status": "open",
-        "spaceLeft": 140,
-        "phone": "(757) 852-4500",
-    },
-    {
-        "id": "fb1",
-        "type": "food",
-        "name": "Peninsula Food Bank",
-        "city": "Newport News, VA",
-        "address": "1201 29th Street, Newport News, VA 23607",
-        "lat": 37.0871,
-        "lon": -76.4730,
-        "status": "open",
-        "foodLeft": 340,
-        "phone": "(757) 555-0130",
-    },
-    {
-        "id": "pd1",
-        "type": "police",
-        "name": "Hampton Police Department",
-        "city": "Hampton, VA",
-        "address": "40 Lincoln Street, Hampton, VA 23669",
-        "lat": 37.0340,
-        "lon": -76.3407,
-        "status": "available",
-        "unitsAvailable": 12,
-        "phone": "(757) 727-6111",
-    },
-    {
-        "id": "fd1",
-        "type": "fire",
-        "name": "Norfolk Fire-Rescue Station",
-        "city": "Norfolk, VA",
-        "address": "701 Granby Street, Norfolk, VA 23510",
-        "lat": 36.8515,
-        "lon": -76.2871,
-        "status": "available",
-        "trucksAvailable": 6,
-        "phone": "(757) 664-6510",
-    },
-    {
-        "id": "tw1",
-        "type": "towing",
-        "name": "Bayview Towing Services",
-        "city": "Virginia Beach, VA",
-        "address": "3505 Shore Drive, Virginia Beach, VA 23455",
-        "lat": 36.8529,
-        "lon": -75.9780,
-        "status": "available",
-        "towTrucksAvailable": 4,
-        "phone": "(757) 555-0199",
-    },
-]
-resource_state = {item["id"]: deepcopy(item) for item in DEMO_RESOURCES}
+# LOOKUP: BACKEND-RESOURCE-DATA
+# Resource records now live in the SQLite database file at DATABASE_PATH. Keeping the
+# source of truth in one place makes multi-user demos easier to manage because Flask,
+# the org portal, and every browser session all read the same saved resource rows.
+
+# LOOKUP: BACKEND-RESOURCE-SERIALIZE
+# The frontend should never work directly with raw SQLite rows, so these helpers
+# normalize database records into the same JSON shape the frontend already expects.
+def get_db_connection():
+    conn = sqlite3.connect(DATABASE_PATH)
+    conn.row_factory = sqlite3.Row
+    return conn
 
 
-def serialize_resources():
-    return [deepcopy(item) for item in resource_state.values()]
+def row_to_resource(row):
+    resource = dict(row)
+    return {key: value for key, value in resource.items() if value is not None}
 
 
+def fetch_all_resources():
+    with get_db_connection() as conn:
+        rows = conn.execute(
+            """
+            SELECT
+                id, type, name, city, address, lat, lon, status, phone,
+                spaceLeft, foodLeft, unitsAvailable, trucksAvailable,
+                bedsAvailable, towTrucksAvailable, updated_at
+            FROM resources
+            ORDER BY rowid
+            """
+        ).fetchall()
+    return [row_to_resource(row) for row in rows]
+
+
+# LOOKUP: BACKEND-RESOURCE-METADATA
+# Different resource types track different count fields. This lookup table lets the
+# update logic stay generic instead of hard-coding a separate branch for every type.
 RESOURCE_COUNT_FIELDS = {
     "shelter": "spaceLeft",
     "food": "foodLeft",
     "police": "unitsAvailable",
     "fire": "trucksAvailable",
+    "hospital": "bedsAvailable",
     "towing": "towTrucksAvailable",
 }
 
 
+# LOOKUP: BACKEND-DATABASE-SETUP
+# SQLite gives the demo a lightweight persistent backend without changing how the
+# frontend talks to Flask. The app auto-creates the database file and schema, while
+# the saved rows inside crisiscloud.db remain the single source of truth.
+def init_db():
+    with get_db_connection() as conn:
+        conn.execute(
+            """
+            CREATE TABLE IF NOT EXISTS resources (
+                id TEXT PRIMARY KEY,
+                type TEXT NOT NULL,
+                name TEXT NOT NULL,
+                city TEXT NOT NULL,
+                address TEXT,
+                lat REAL NOT NULL,
+                lon REAL NOT NULL,
+                status TEXT NOT NULL,
+                phone TEXT,
+                spaceLeft INTEGER,
+                foodLeft INTEGER,
+                unitsAvailable INTEGER,
+                trucksAvailable INTEGER,
+                bedsAvailable INTEGER,
+                towTrucksAvailable INTEGER,
+                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+            )
+            """
+        )
+
+        conn.commit()
+
+
+# LOOKUP: BACKEND-RESOURCE-UPDATES
+# This function applies organization portal edits to one resource record. It updates
+# shared fields like status and phone, then updates the type-specific capacity field
+# based on the metadata map above.
 def merge_resource_update(resource, payload):
     if payload.get("status"):
         resource["status"] = str(payload["status"]).lower()
@@ -127,6 +115,10 @@ def merge_resource_update(resource, payload):
     return resource
 
 
+# LOOKUP: BACKEND-WEATHER-FORECAST
+# The NWS /points endpoint provides a forecast URL for the selected location. This
+# helper fetches that weekly forecast data and normalizes the first seven periods
+# so the frontend can render forecast cards without understanding the raw NWS schema.
 def extract_weekly_forecast(points_properties):
     forecast_url = points_properties.get("forecast")
     if not forecast_url:
@@ -150,6 +142,11 @@ def extract_weekly_forecast(points_properties):
 
     return weekly_periods
 
+
+# LOOKUP: BACKEND-NWS-REQUEST
+# All National Weather Service requests go through this helper. Centralizing the
+# HTTP call keeps headers, timeout rules, and error handling consistent across
+# current weather, forecast, and alert requests.
 def nws_get(url: str):
     r = requests.get(
         url,
@@ -175,36 +172,84 @@ def nws_get(url: str):
 
     return data
 
+
+# LOOKUP: BACKEND-PAGE-ROUTES
+# These routes render the main HTML page and handle the empty favicon request that
+# browsers make automatically.
 @app.route("/")
 def home():
-    # Make sure templates/CrisisCloudDb.html exists
     return render_template("crisisCloud.html")
+
+
+@app.get("/assets/icons/<path:filename>")
+def icon_assets(filename):
+    return send_from_directory(ICON_DIRECTORY, filename)
+
 
 @app.get("/favicon.ico")
 def favicon():
     return "", 204
 
 
+# LOOKUP: BACKEND-RESOURCE-API
+# These endpoints power the live resource map and sidebar directories. The GET route
+# sends the current shared resource list to the frontend, and the POST route applies
+# org portal edits to one selected record.
 @app.get("/api/resources")
 def get_resources():
-    return jsonify({"resources": serialize_resources()})
+    return jsonify({"resources": fetch_all_resources()})
 
 
 @app.post("/api/resources/<resource_id>")
 def update_resource(resource_id):
-    resource = resource_state.get(resource_id)
-    if resource is None:
-        return jsonify({"error": "Resource not found"}), 404
-
     payload = request.get_json(silent=True) or {}
 
     try:
-        updated = merge_resource_update(resource, payload)
+        with get_db_connection() as conn:
+            row = conn.execute(
+                """
+                SELECT
+                    id, type, name, city, address, lat, lon, status, phone,
+                    spaceLeft, foodLeft, unitsAvailable, trucksAvailable,
+                    bedsAvailable, towTrucksAvailable, updated_at
+                FROM resources
+                WHERE id = ?
+                """,
+                (resource_id,),
+            ).fetchone()
+
+            if row is None:
+                return jsonify({"error": "Resource not found"}), 404
+
+            resource = row_to_resource(row)
+            updated = merge_resource_update(resource, payload)
+            count_field = RESOURCE_COUNT_FIELDS.get(resource["type"])
+
+            conn.execute(
+                f"""
+                UPDATE resources
+                SET status = ?, phone = ?, {count_field} = ?, updated_at = CURRENT_TIMESTAMP
+                WHERE id = ?
+                """,
+                (
+                    updated["status"],
+                    updated.get("phone"),
+                    updated.get(count_field),
+                    resource_id,
+                ),
+            )
+            conn.commit()
     except (TypeError, ValueError):
         return jsonify({"error": "Invalid update payload"}), 400
 
-    return jsonify({"resource": deepcopy(updated), "resources": serialize_resources()})
+    return jsonify({"resource": deepcopy(updated), "resources": fetch_all_resources()})
 
+
+# LOOKUP: BACKEND-WEATHER-API
+# This endpoint is called whenever the frontend wants live weather for the current
+# map center. It validates latitude/longitude, resolves NWS point metadata, loads
+# the latest station observation, weekly forecast, and active alerts, then returns
+# a single JSON payload that the dashboard can render.
 @app.get("/api/weather/live")
 def weather_live():
     # Validate query params
@@ -299,7 +344,11 @@ def weather_live():
         return jsonify({"error": "Server error", "details": str(e)}), 500
 
 
+# LOOKUP: BACKEND-APP-START
+# Running this file directly starts the Flask development server. This is the entry
+# point teammates use from the terminal during local development and demo prep.
+init_db()
+
+
 if __name__ == "__main__":
-    app.run(debug=True)
-
-
+    app.run(host="0.0.0.0", port=5000, debug=True)
