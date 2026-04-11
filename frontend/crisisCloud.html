@@ -19,9 +19,10 @@
     /* ===== THEME VARIABLES ===== */
     :root {
       --bg-body: #0b1220;
-      --bg-card: #101a2e;
-      --bg-input: #0b1220;
-      --border-color: #1f2a44;
+      --bg-card: rgba(16, 26, 46, 0.88);
+      --bg-card-strong: #13203a;
+      --bg-input: rgba(11, 18, 32, 0.9);
+      --border-color: rgba(148, 163, 184, 0.18);
       --text-main: #e5e7eb;
       --text-muted: #94a3b8;
       --text-small: #cbd5e1;
@@ -29,13 +30,17 @@
       --accent-hover: #93c5fd;
       --btn-text: #081023;
       --danger: #fb7185;
+      --shadow-soft: 0 18px 40px rgba(2, 6, 23, 0.28);
+      --shadow-card: 0 20px 40px rgba(2, 6, 23, 0.34);
+      --header-glow: radial-gradient(circle at top left, rgba(96, 165, 250, 0.22), transparent 42%);
     }
 
     [data-theme="light"] {
-      --bg-body: #f1f5f9;
-      --bg-card: #ffffff;
-      --bg-input: #ffffff;
-      --border-color: #cbd5e1;
+      --bg-body: #eef4fb;
+      --bg-card: rgba(255, 255, 255, 0.95);
+      --bg-card-strong: #ffffff;
+      --bg-input: rgba(255, 255, 255, 0.96);
+      --border-color: rgba(100, 116, 139, 0.18);
       --text-main: #1e293b;
       --text-muted: #475569;
       --text-small: #334155;
@@ -43,13 +48,16 @@
       --accent-hover: #1d4ed8;
       --btn-text: #ffffff;
       --danger: #e11d48;
+      --shadow-soft: 0 18px 40px rgba(148, 163, 184, 0.18);
+      --shadow-card: 0 20px 48px rgba(148, 163, 184, 0.2);
+      --header-glow: radial-gradient(circle at top left, rgba(37, 99, 235, 0.12), transparent 40%);
     }
 
     * {
       margin: 0;
       padding: 0;
       box-sizing: border-box;
-      font-family: Arial, sans-serif;
+      font-family: "Segoe UI Variable", "Segoe UI", "Trebuchet MS", sans-serif;
       transition: background 0.3s, color 0.3s, border-color 0.3s;
     }
 
@@ -57,13 +65,30 @@
       margin: 0;
       background: var(--bg-body);
       color: var(--text-main);
+      background-image:
+        radial-gradient(circle at top, rgba(96, 165, 250, 0.1), transparent 32%),
+        linear-gradient(180deg, rgba(15, 23, 42, 0.08), transparent 26%);
+      min-height: 100vh;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 12% 10%, rgba(14, 165, 233, 0.08), transparent 22%),
+        radial-gradient(circle at 88% 16%, rgba(248, 113, 113, 0.07), transparent 18%);
+      z-index: -1;
     }
 
     header {
-      background: var(--bg-card);
-      padding: 16px;
+      background: linear-gradient(135deg, rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.74)), var(--header-glow);
+      padding: 18px 20px;
       border-bottom: 1px solid var(--border-color);
       position: sticky; top: 0; z-index: 10;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 10px 30px rgba(2, 6, 23, 0.18);
     }
 
     /* LOOKUP: FRONTEND-STYLES-TOGGLE
@@ -137,31 +162,66 @@
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
+      gap: 12px;
+    }
+    h1 { margin: 0; font-size: 32px; line-height: 1.05; color: #f8fafc; letter-spacing: -0.03em; }
+    h2 { margin: 0 0 8px; font-size: 18px; color: var(--text-main); letter-spacing: -0.02em; }
+    h3 { margin: 0 0 8px; font-size: 14px; color: var(--text-main); }
+    p { margin: 6px 0 0; color: var(--text-small); line-height: 1.5; }
+
+    .brandBlock {
+      display: grid;
+      gap: 6px;
+    }
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      width: fit-content;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: rgba(96, 165, 250, 0.14);
+      border: 1px solid rgba(191, 219, 254, 0.15);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: #dbeafe;
+    }
+    .headerSubtext {
+      max-width: 620px;
+      color: rgba(226, 232, 240, 0.88);
+      font-size: 14px;
+    }
+    .headerActions {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
       gap: 10px;
     }
-    h1 { margin: 0; font-size: 22px; color: var(--text-main); }
-    h2 { margin: 0 0 8px; font-size: 16px; color: var(--text-main); }
-    h3 { margin: 0 0 8px; font-size: 14px; color: var(--text-main); }
-    p { margin: 6px 0 0; color: var(--text-small); line-height: 1.35; }
 
     button, select, input {
-      padding: 10px 14px;
-      border-radius: 10px;
+      padding: 11px 14px;
+      border-radius: 12px;
       border: 1px solid var(--border-color);
       background: var(--bg-input);
       color: var(--text-main);
       cursor: pointer;
-      font-weight: 600;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+    }
+    button:hover, select:hover, input:hover {
+      border-color: rgba(96, 165, 250, 0.45);
     }
     button.primary {
-      background: var(--accent);
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
       border: none;
       color: var(--btn-text);
+      box-shadow: 0 14px 28px rgba(37, 99, 235, 0.26);
     }
     button.ghost {
-      background: var(--border-color);
-      border: none;
-      color: var(--text-main);
+      background: rgba(255,255,255,0.08);
+      color: #e2e8f0;
     }
     button.danger {
       background: var(--danger);
@@ -170,40 +230,47 @@
     }
 
     main {
-      padding: 20px;
-      max-width: 1100px;
+      padding: 24px 20px 32px;
+      max-width: 1280px;
       margin: auto;
     }
     .grid {
       display: grid;
-      grid-template-columns: 1.1fr .9fr;
-      gap: 14px;
+      grid-template-columns: minmax(0, 1.18fr) minmax(320px, 0.82fr);
+      gap: 18px;
     }
     @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
 
     .card {
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 16px;
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: var(--shadow-card);
+      backdrop-filter: blur(14px);
     }
 
     #map {
       width: 100%;
-      height: 420px;
-      border-radius: 14px;
+      height: 460px;
+      border-radius: 20px;
       border: 1px solid var(--border-color);
       overflow: hidden;
-      margin-top: 12px;
+      margin-top: 14px;
       position: relative;
       z-index: 1;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.04), var(--shadow-soft);
     }
     .toolbar {
       display: flex;
       gap: 10px;
       flex-wrap: wrap;
-      margin-top: 10px;
+      margin-top: 14px;
       align-items: center;
+      padding: 12px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--border-color);
     }
     .small {
       font-size: 12px;
@@ -216,15 +283,23 @@
       gap: 14px;
       flex-wrap: wrap;
       align-items: center;
-      margin-top: 10px;
-      padding: 10px 12px;
+      margin-top: 14px;
+      padding: 12px 14px;
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      background: var(--bg-input);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.04);
       color: var(--text-small);
       font-size: 13px;
     }
-    .legendItem { display: flex; align-items: center; gap: 8px; }
+    .legendItem {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(148, 163, 184, 0.14);
+    }
     .legendIcon,
     .resourceLabelIcon {
       width: 20px;
@@ -238,16 +313,18 @@
     }
 
     .weatherTitle {
-      margin-top: 12px;
-      font-size: 13px;
+      margin-top: 16px;
+      font-size: 12px;
       color: var(--text-small);
       font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
     }
     .collapsibleSection {
       margin-top: 12px;
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      background: var(--bg-input);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.04);
       overflow: hidden;
     }
     .collapsibleSummary {
@@ -292,7 +369,7 @@
       margin-top: 0;
     }
     .weatherBtn {
-      background: var(--bg-card);
+      background: rgba(255,255,255,0.06);
       border: 1px solid var(--border-color);
       border-radius: 999px;
       padding: 9px 12px;
@@ -338,7 +415,7 @@
     .resourceMarker.status-limited { box-shadow: 0 0 0 5px rgba(202,138,4,0.60), 0 8px 16px rgba(0,0,0,0.25); }
     .resourceMarker.status-full,
     .resourceMarker.status-closed,
-    .resourceMarker.status-busy { box-shadow: 0 0 0 5px rgba(185,28,28,0.60), 0 8px 16px rgba(0,0,0,0.25); }
+    .resourceMarker.status-busy { box-shadow: 0 0 0 7px rgba(153,27,27,0.88), 0 8px 16px rgba(0,0,0,0.25); }
     .resourceMarkerImage,
     .incidentMarkerImage {
       width: 22px;
@@ -361,9 +438,10 @@
       width: min(520px, 95vw);
       background: var(--bg-card);
       border: 1px solid var(--border-color);
-      border-radius: 14px;
-      padding: 14px;
+      border-radius: 18px;
+      padding: 18px;
       position: relative;
+      box-shadow: var(--shadow-card);
     }
     .label {
       font-size: 12px;
@@ -371,13 +449,14 @@
       margin: 10px 0 6px;
     }
     .mutedBox {
-      margin-top: 10px;
-      padding: 10px 12px;
+      margin-top: 12px;
+      padding: 12px 14px;
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      background: var(--bg-input);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
       color: var(--text-small);
       font-size: 13px;
+      box-shadow: var(--shadow-soft);
     }
     /* LOOKUP: FRONTEND-STYLES-DATA-PANELS
        These classes style the forecast cards and sidebar directory cards that
@@ -385,14 +464,15 @@
     .forecastGrid {
       display: grid;
       grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 10px;
-      margin-top: 10px;
+      gap: 12px;
+      margin-top: 12px;
     }
     .forecastCard {
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      background: var(--bg-input);
-      padding: 10px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      padding: 12px;
+      box-shadow: var(--shadow-soft);
     }
     .forecastName {
       font-size: 12px;
@@ -423,12 +503,13 @@
     }
     .contactCard {
       border: 1px solid var(--border-color);
-      border-radius: 12px;
-      background: var(--bg-input);
-      padding: 12px;
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      padding: 14px;
+      box-shadow: var(--shadow-soft);
     }
     .contactTitle {
-      font-size: 13px;
+      font-size: 14px;
       font-weight: 700;
       color: var(--text-main);
     }
@@ -458,6 +539,169 @@
       width: 100%;
       text-align: left;
       cursor: pointer;
+      position: relative;
+      overflow: hidden;
+    }
+    .directoryCardButton:hover {
+      transform: translateY(-2px);
+      border-color: rgba(96, 165, 250, 0.4);
+      box-shadow: 0 16px 26px rgba(15, 23, 42, 0.18);
+    }
+    .dashboardHero {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border-radius: 20px;
+      background:
+        linear-gradient(135deg, rgba(37, 99, 235, 0.18), rgba(15, 23, 42, 0.08)),
+        rgba(255,255,255,0.03);
+      border: 1px solid rgba(96, 165, 250, 0.18);
+      box-shadow: var(--shadow-soft);
+    }
+    .heroKicker {
+      display: inline-flex;
+      width: fit-content;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--accent-hover);
+      background: rgba(96, 165, 250, 0.12);
+    }
+    .heroTitle {
+      font-size: 28px;
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.03em;
+    }
+    .heroSummary {
+      max-width: 720px;
+      color: var(--text-small);
+      font-size: 14px;
+    }
+    .statRow {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 10px;
+    }
+    .statChip {
+      display: grid;
+      gap: 4px;
+      padding: 12px 14px;
+      border-radius: 16px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(148, 163, 184, 0.16);
+    }
+    .statLabel {
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    .statValue {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.04em;
+      color: var(--text-main);
+    }
+    .weatherButtons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 14px;
+    }
+    .filterPanel {
+      margin-top: 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      background: rgba(255,255,255,0.04);
+      overflow: hidden;
+    }
+    .filterPanelSummary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
+      list-style: none;
+      color: var(--text-main);
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .filterPanelSummary::-webkit-details-marker {
+      display: none;
+    }
+    .filterPanelSummary::after {
+      content: "+";
+      font-size: 18px;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .filterPanel[open] .filterPanelSummary::after {
+      content: "−";
+    }
+    .filterPanelMeta {
+      color: var(--text-muted);
+      font-weight: 700;
+      font-size: 12px;
+    }
+    .filterPanelBody {
+      display: grid;
+      gap: 10px;
+      padding: 0 14px 14px;
+    }
+    .filterOptionGrid {
+      display: grid;
+      gap: 8px;
+    }
+    .filterOption {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 14px;
+      border: 1px solid var(--border-color);
+      background: rgba(255,255,255,0.05);
+      color: var(--text-main);
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .filterOption input {
+      width: 16px;
+      height: 16px;
+      margin: 0;
+      accent-color: var(--accent);
+      cursor: pointer;
+      box-shadow: none;
+    }
+    .filterOptionText {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .filterPanelActions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .filterPanelActions button {
+      flex: 1 1 140px;
+      background: rgba(255,255,255,0.16);
+      color: var(--text-main);
+      border-color: rgba(96, 165, 250, 0.22);
+      box-shadow: 0 8px 18px rgba(15, 23, 42, 0.1);
+    }
+    .filterPanelActions button:hover {
+      background: rgba(255,255,255,0.22);
+      color: var(--text-main);
+    }
+    .is-hidden {
+      display: none !important;
     }
     body.modal-open #map { filter: blur(2px); opacity: 0.6; }
   </style>
@@ -470,8 +714,12 @@
      and org login shortcut used throughout the demo. -->
 <header>
   <div class="row">
-    <h1>☁️ CrisisCloud</h1>
-    <div class="row">
+    <div class="brandBlock">
+      <div class="eyebrow">Hampton Roads Crisis Dashboard</div>
+      <h1>CrisisCloud</h1>
+      <p class="headerSubtext">A shared emergency operations view for shelters, food access, public safety, hospitals, and severe weather response across the region.</p>
+    </div>
+    <div class="headerActions">
       <div class="theme-switch-wrapper">
         <label class="theme-switch" for="themeCheckbox">
           <input type="checkbox" id="themeCheckbox">
@@ -495,8 +743,25 @@
          This section contains the public-facing map, legend, filters, incident
          demo controls, and weather panels that update based on the current map center. -->
     <section class="card">
-      <h2>Public Dashboard</h2>
-      <p>Real-time shelter capacity, emergency services, and incident reports.</p>
+      <div class="dashboardHero">
+        <span class="heroKicker">Public Dashboard</span>
+        <div class="heroTitle">Regional emergency visibility in one place</div>
+        <p class="heroSummary">Monitor live resource status, focus the map by city, and quickly move between storm shelters, food banks, and emergency response services during severe weather.</p>
+        <div class="statRow">
+          <div class="statChip">
+            <span class="statLabel">Visible Resources</span>
+            <span class="statValue" id="statVisibleResources">0</span>
+          </div>
+          <div class="statChip">
+            <span class="statLabel">Selected City</span>
+            <span class="statValue" id="statActiveCity">Norfolk</span>
+          </div>
+          <div class="statChip">
+            <span class="statLabel">Open Shelters + Food</span>
+            <span class="statValue" id="statOpenSupport">0</span>
+          </div>
+        </div>
+      </div>
 
       <div class="legend">
         <div class="legendItem"><img class="legendIcon" src="/assets/icons/shelter.png" alt="Shelter"><span>Shelter</span></div>
@@ -516,15 +781,6 @@
       </div>
 
       <div class="toolbar">
-        <select id="filterType">
-          <option value="all">All Types</option>
-          <option value="shelter">Shelters</option>
-          <option value="food">Food Banks</option>
-          <option value="police">Police</option>
-          <option value="fire">Fire</option>
-          <option value="hospital">Hospitals</option>
-          <option value="towing">Towing</option>
-        </select>
         <select id="cityFilter">
           <option value="All">All</option>
           <option value="Norfolk" selected>Norfolk</option>
@@ -563,10 +819,49 @@
         <button class="primary" style="margin-top:15px;" id="btnOpenLogin">Login to Update Status</button>
       </div>
 
+      <details class="filterPanel" open>
+        <summary class="filterPanelSummary">
+          <span>Resource Filters</span>
+          <span class="filterPanelMeta" id="resourceFilterSummary">All resource types</span>
+        </summary>
+        <div class="filterPanelBody">
+          <div class="filterOptionGrid" id="resourceFilterPanel">
+            <label class="filterOption">
+              <input type="checkbox" value="shelter" checked>
+              <span class="filterOptionText"><img class="resourceLabelIcon" src="/assets/icons/shelter.png" alt="Shelter">Storm Shelters</span>
+            </label>
+            <label class="filterOption">
+              <input type="checkbox" value="food" checked>
+              <span class="filterOptionText"><img class="resourceLabelIcon" src="/assets/icons/foodBank.png" alt="Food Bank">Food Banks</span>
+            </label>
+            <label class="filterOption">
+              <input type="checkbox" value="police" checked>
+              <span class="filterOptionText"><img class="resourceLabelIcon" src="/assets/icons/police.png" alt="Police">Police Stations</span>
+            </label>
+            <label class="filterOption">
+              <input type="checkbox" value="fire" checked>
+              <span class="filterOptionText"><img class="resourceLabelIcon" src="/assets/icons/incident.png" alt="Fire">Fire Stations</span>
+            </label>
+            <label class="filterOption">
+              <input type="checkbox" value="hospital" checked>
+              <span class="filterOptionText"><img class="resourceLabelIcon" src="/assets/icons/ambulance.png" alt="Hospital">Hospitals</span>
+            </label>
+            <label class="filterOption">
+              <input type="checkbox" value="towing" checked>
+              <span class="filterOptionText"><img class="resourceLabelIcon" src="/assets/icons/towing.png" alt="Towing">Towing Services</span>
+            </label>
+          </div>
+          <div class="filterPanelActions">
+            <button class="ghost" id="btnSelectAllTypes" type="button">Show All</button>
+            <button class="ghost" id="btnClearAllTypes" type="button">Clear All</button>
+          </div>
+        </div>
+      </details>
+
       <details class="collapsibleSection" open>
         <summary class="collapsibleSummary">Emergency Contact Directory</summary>
         <div class="collapsibleBody">
-          <details class="collapsibleSection nestedCollapsible" open>
+          <details class="collapsibleSection nestedCollapsible" open id="policeSection">
             <summary class="collapsibleSummary">Police Stations</summary>
             <div class="collapsibleBody">
               <div class="contactList" id="policeDirectory">
@@ -575,7 +870,7 @@
             </div>
           </details>
 
-          <details class="collapsibleSection nestedCollapsible" open>
+          <details class="collapsibleSection nestedCollapsible" open id="fireSection">
             <summary class="collapsibleSummary">Fire Stations</summary>
             <div class="collapsibleBody">
               <div class="contactList" id="fireDirectory">
@@ -584,7 +879,7 @@
             </div>
           </details>
 
-          <details class="collapsibleSection nestedCollapsible" open>
+          <details class="collapsibleSection nestedCollapsible" open id="hospitalSection">
             <summary class="collapsibleSummary">Hospitals</summary>
             <div class="collapsibleBody">
               <div class="contactList" id="hospitalDirectory">
@@ -593,7 +888,7 @@
             </div>
           </details>
 
-          <details class="collapsibleSection nestedCollapsible" open>
+          <details class="collapsibleSection nestedCollapsible" open id="towingSection">
             <summary class="collapsibleSummary">Towing Services</summary>
             <div class="collapsibleBody">
               <div class="contactList" id="towingDirectory">
@@ -604,7 +899,7 @@
         </div>
       </details>
 
-      <details class="collapsibleSection" open>
+      <details class="collapsibleSection" open id="shelterSection">
         <summary class="collapsibleSummary">Storm Shelter Directory</summary>
         <div class="collapsibleBody">
           <div class="contactList" id="shelterDirectory">
@@ -613,7 +908,7 @@
         </div>
       </details>
 
-      <details class="collapsibleSection" open>
+      <details class="collapsibleSection" open id="foodSection">
         <summary class="collapsibleSummary">Food Bank Directory</summary>
         <div class="collapsibleBody">
           <div class="contactList" id="foodDirectory">
@@ -657,11 +952,19 @@
   const RESOURCE_POLL_MS = 5000;
   let resources = [];
   let loggedInResourceId = null;
-  let activeFilter = "all";
+  const RESOURCE_TYPES = ["shelter", "food", "police", "fire", "hospital", "towing"];
+  const RESOURCE_TYPE_LABELS = {
+    shelter: "Storm Shelters",
+    food: "Food Banks",
+    police: "Police Stations",
+    fire: "Fire Stations",
+    hospital: "Hospitals",
+    towing: "Towing Services"
+  };
+  let activeTypeFilters = new Set(RESOURCE_TYPES);
   let activeCity = "Norfolk";
 
   const themeCheckbox = document.getElementById("themeCheckbox");
-  const filterType = document.getElementById("filterType");
   const cityFilter = document.getElementById("cityFilter");
   const mapElement = document.getElementById("map");
   const loginBackdrop = document.getElementById("loginBackdrop");
@@ -674,6 +977,17 @@
   const weatherBox = document.getElementById("weatherBox");
   const alertsBox = document.getElementById("alertsBox");
   const forecastGrid = document.getElementById("forecastGrid");
+  const statVisibleResources = document.getElementById("statVisibleResources");
+  const statActiveCity = document.getElementById("statActiveCity");
+  const statOpenSupport = document.getElementById("statOpenSupport");
+  const resourceFilterSummary = document.getElementById("resourceFilterSummary");
+  const resourceFilterPanel = document.getElementById("resourceFilterPanel");
+  const policeSection = document.getElementById("policeSection");
+  const fireSection = document.getElementById("fireSection");
+  const hospitalSection = document.getElementById("hospitalSection");
+  const towingSection = document.getElementById("towingSection");
+  const shelterSection = document.getElementById("shelterSection");
+  const foodSection = document.getElementById("foodSection");
   const policeDirectory = document.getElementById("policeDirectory");
   const fireDirectory = document.getElementById("fireDirectory");
   const hospitalDirectory = document.getElementById("hospitalDirectory");
@@ -793,10 +1107,59 @@
 
   function filteredResources() {
     return resources.filter((resource) => {
-      const matchesType = activeFilter === "all" || resource.type === activeFilter;
+      const matchesType = activeTypeFilters.has(resource.type);
       const matchesCity = activeCity === "All" || !activeCity || (resource.city || "").toLowerCase().startsWith(activeCity.toLowerCase());
       return matchesType && matchesCity;
     });
+  }
+
+  function syncResourceFilterSummary() {
+    if (activeTypeFilters.size === RESOURCE_TYPES.length) {
+      resourceFilterSummary.textContent = "All resource types";
+      return;
+    }
+    if (activeTypeFilters.size === 0) {
+      resourceFilterSummary.textContent = "No resource types selected";
+      return;
+    }
+    if (activeTypeFilters.size <= 2) {
+      resourceFilterSummary.textContent = Array.from(activeTypeFilters)
+        .map((type) => RESOURCE_TYPE_LABELS[type])
+        .join(" + ");
+      return;
+    }
+    resourceFilterSummary.textContent = `${activeTypeFilters.size} resource types selected`;
+  }
+
+  function syncResourceFilterInputs() {
+    resourceFilterPanel.querySelectorAll('input[type="checkbox"]').forEach((input) => {
+      input.checked = activeTypeFilters.has(input.value);
+    });
+    syncResourceFilterSummary();
+  }
+
+  function refreshFilteredViews() {
+    updateDashboardSummary();
+    renderContactDirectory();
+    renderMarkers();
+    renderShelterDirectory();
+    renderFoodDirectory();
+  }
+
+  function toggleDirectorySection(sectionElement, shouldShow) {
+    sectionElement.classList.toggle("is-hidden", !shouldShow);
+  }
+
+  function updateDashboardSummary() {
+    const visibleResources = filteredResources();
+    const openSupportCount = visibleResources.filter((resource) =>
+      (resource.type === "shelter" || resource.type === "food") &&
+      ["open", "available"].includes((resource.status || "").toLowerCase())
+    ).length;
+
+    statVisibleResources.textContent = String(visibleResources.length);
+    statActiveCity.textContent = activeCity === "All" ? "All Cities" : activeCity;
+    statOpenSupport.textContent = String(openSupportCount);
   }
 
   // LOOKUP: FRONTEND-MAP-RENDER
@@ -842,6 +1205,11 @@
 
   function renderContactDirectory() {
     const visibleResources = filteredResources();
+    toggleDirectorySection(policeSection, activeTypeFilters.has("police"));
+    toggleDirectorySection(fireSection, activeTypeFilters.has("fire"));
+    toggleDirectorySection(hospitalSection, activeTypeFilters.has("hospital"));
+    toggleDirectorySection(towingSection, activeTypeFilters.has("towing"));
+
     renderEmergencyCards(
       policeDirectory,
       visibleResources.filter((resource) => resource.type === "police"),
@@ -881,6 +1249,7 @@
   }
 
   function renderShelterDirectory() {
+    toggleDirectorySection(shelterSection, activeTypeFilters.has("shelter"));
     const shelters = filteredResources().filter((resource) => resource.type === "shelter");
     renderDirectoryCards(
       shelterDirectory,
@@ -890,6 +1259,7 @@
   }
 
   function renderFoodDirectory() {
+    toggleDirectorySection(foodSection, activeTypeFilters.has("food"));
     const foodBanks = filteredResources().filter((resource) => resource.type === "food");
     renderDirectoryCards(
       foodDirectory,
@@ -905,10 +1275,10 @@
     const resource = resources.find((item) => item.id === resourceId);
     if (!resource) return;
 
-    if (activeFilter !== "all" && activeFilter !== resource.type) {
-      activeFilter = "all";
-      filterType.value = "all";
-      renderMarkers();
+    if (!activeTypeFilters.has(resource.type)) {
+      activeTypeFilters.add(resource.type);
+      syncResourceFilterInputs();
+      refreshFilteredViews();
     }
     mapElement.scrollIntoView({ behavior: "smooth", block: "start" });
     map.setView([resource.lat, resource.lon], 13);
@@ -957,10 +1327,7 @@
     const data = await res.json();
     resources = data.resources || [];
     renderLoginOptions();
-    renderContactDirectory();
-    renderMarkers();
-    renderShelterDirectory();
-    renderFoodDirectory();
+    refreshFilteredViews();
 
     if (loggedInResourceId && resources.some((item) => item.id === loggedInResourceId)) {
       renderOrgControls();
@@ -1019,7 +1386,7 @@
 
     const data = await res.json();
     resources = data.resources || resources;
-    renderMarkers();
+    refreshFilteredViews();
     renderOrgControls();
   };
 
@@ -1109,17 +1476,35 @@
     refreshWeatherForMapCenter();
   };
 
-  filterType.onchange = (event) => {
-    activeFilter = event.target.value;
-    renderMarkers();
-  };
-
   cityFilter.onchange = (event) => {
     activeCity = event.target.value;
-    renderContactDirectory();
-    renderShelterDirectory();
-    renderFoodDirectory();
-    renderMarkers();
+    refreshFilteredViews();
+  };
+
+  resourceFilterPanel.onchange = (event) => {
+    const input = event.target.closest('input[type="checkbox"]');
+    if (!input) return;
+
+    if (input.checked) {
+      activeTypeFilters.add(input.value);
+    } else {
+      activeTypeFilters.delete(input.value);
+    }
+
+    syncResourceFilterSummary();
+    refreshFilteredViews();
+  };
+
+  document.getElementById("btnSelectAllTypes").onclick = () => {
+    activeTypeFilters = new Set(RESOURCE_TYPES);
+    syncResourceFilterInputs();
+    refreshFilteredViews();
+  };
+
+  document.getElementById("btnClearAllTypes").onclick = () => {
+    activeTypeFilters = new Set();
+    syncResourceFilterInputs();
+    refreshFilteredViews();
   };
 
   shelterDirectory.onclick = (event) => {
@@ -1178,5 +1563,3 @@
 
 </body>
 </html>
-
-
