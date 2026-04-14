@@ -805,19 +805,19 @@
       </div>
 
       <div class="legend">
-        <div class="legendItem"><img class="legendIcon" src="/assets/icons/shelter.png" alt="Shelter"><span>Shelter</span></div>
-        <div class="legendItem"><img class="legendIcon" src="/assets/icons/foodBank.png" alt="Food Bank"><span>Food Bank</span></div>
-        <div class="legendItem"><img class="legendIcon" src="/assets/icons/police.png" alt="Police"><span>Police</span></div>
-        <div class="legendItem"><img class="legendIcon" src="/assets/icons/incident.png" alt="Fire"><span>Fire</span></div>
-        <div class="legendItem"><img class="legendIcon" src="/assets/icons/ambulance.png" alt="Hospital"><span>Hospital</span></div>
-        <div class="legendItem"><img class="legendIcon" src="/assets/icons/towing.png" alt="Towing"><span>Towing</span></div>
-        <div class="legendItem"><img class="legendIcon" src="/assets/icons/incident.png" alt="Incident"><span>Incident</span></div>
+        <div class="legendItem"><img class="legendIcon" src="/static/icons/shelter.png" alt="Shelter"><span>Shelter</span></div>
+        <div class="legendItem"><img class="legendIcon" src="/static/icons/foodBank.png" alt="Food Bank"><span>Food Bank</span></div>
+        <div class="legendItem"><img class="legendIcon" src="/static/icons/police.png" alt="Police"><span>Police</span></div>
+        <div class="legendItem"><img class="legendIcon" src="/static/icons/incident.png" alt="Fire"><span>Fire</span></div>
+        <div class="legendItem"><img class="legendIcon" src="/static/icons/ambulance.png" alt="Hospital"><span>Hospital</span></div>
+        <div class="legendItem"><img class="legendIcon" src="/static/icons/towing.png" alt="Towing"><span>Towing</span></div>
+        <div class="legendItem"><img class="legendIcon" src="/static/icons/incident.png" alt="Incident"><span>Incident</span></div>
       </div>
 
       <div class="weatherButtons">
-        <button class="weatherBtn" id="btnFlood"><img src="/assets/icons/flood.png" alt="Flood">Flood</button>
-        <button class="weatherBtn" id="btnHurricane"><img src="/assets/icons/hurricane.png" alt="Hurricane">Hurricane</button>
-        <button class="weatherBtn" id="btnStorm"><img src="/assets/icons/storm.png" alt="Storm">Storm</button>
+        <button class="weatherBtn" id="btnFlood"><img src="/static/icons/flood.png" alt="Flood">Flood</button>
+        <button class="weatherBtn" id="btnHurricane"><img src="/static/icons/hurricane.png" alt="Hurricane">Hurricane</button>
+        <button class="weatherBtn" id="btnStorm"><img src="/static/icons/storm.png" alt="Storm">Storm</button>
         <button class="weatherBtn" id="btnClearIncidents">Clear</button>
       </div>
 
@@ -903,27 +903,27 @@
           <div class="filterOptionGrid" id="resourceFilterPanel">
             <label class="filterOption">
               <input type="checkbox" value="shelter" checked>
-              <span class="filterOptionText"><img class="resourceLabelIcon" src="/assets/icons/shelter.png" alt="Shelter">Storm Shelters</span>
+              <span class="filterOptionText"><img class="resourceLabelIcon" src="/static/icons/shelter.png" alt="Shelter">Storm Shelters</span>
             </label>
             <label class="filterOption">
               <input type="checkbox" value="food" checked>
-              <span class="filterOptionText"><img class="resourceLabelIcon" src="/assets/icons/foodBank.png" alt="Food Bank">Food Banks</span>
+              <span class="filterOptionText"><img class="resourceLabelIcon" src="/static/icons/foodBank.png" alt="Food Bank">Food Banks</span>
             </label>
             <label class="filterOption">
               <input type="checkbox" value="police" checked>
-              <span class="filterOptionText"><img class="resourceLabelIcon" src="/assets/icons/police.png" alt="Police">Police Stations</span>
+              <span class="filterOptionText"><img class="resourceLabelIcon" src="/static/icons/police.png" alt="Police">Police Stations</span>
             </label>
             <label class="filterOption">
               <input type="checkbox" value="fire" checked>
-              <span class="filterOptionText"><img class="resourceLabelIcon" src="/assets/icons/incident.png" alt="Fire">Fire Stations</span>
+              <span class="filterOptionText"><img class="resourceLabelIcon" src="/static/icons/incident.png" alt="Fire">Fire Stations</span>
             </label>
             <label class="filterOption">
               <input type="checkbox" value="hospital" checked>
-              <span class="filterOptionText"><img class="resourceLabelIcon" src="/assets/icons/ambulance.png" alt="Hospital">Hospitals</span>
+              <span class="filterOptionText"><img class="resourceLabelIcon" src="/static/icons/ambulance.png" alt="Hospital">Hospitals</span>
             </label>
             <label class="filterOption">
               <input type="checkbox" value="towing" checked>
-              <span class="filterOptionText"><img class="resourceLabelIcon" src="/assets/icons/towing.png" alt="Towing">Towing Services</span>
+              <span class="filterOptionText"><img class="resourceLabelIcon" src="/static/icons/towing.png" alt="Towing">Towing Services</span>
             </label>
           </div>
           <div class="filterPanelActions">
@@ -1073,16 +1073,16 @@
   let mapTileLayer;
   let markerById = {};
   const resourceIcons = {
-    shelter: "/assets/icons/shelter.png",
-    food: "/assets/icons/foodBank.png",
-    police: "/assets/icons/police.png",
-    fire: "/assets/icons/incident.png",
-    hospital: "/assets/icons/ambulance.png",
-    towing: "/assets/icons/towing.png",
-    incident: "/assets/icons/incident.png",
-    flood: "/assets/icons/flood.png",
-    hurricane: "/assets/icons/hurricane.png",
-    storm: "/assets/icons/storm.png"
+    shelter: "/static/icons/shelter.png",
+    food: "/static/icons/foodBank.png",
+    police: "/static/icons/police.png",
+    fire: "/static/icons/incident.png",
+    hospital: "/static/icons/ambulance.png",
+    towing: "/static/icons/towing.png",
+    incident: "/static/icons/incident.png",
+    flood: "/static/icons/flood.png",
+    hurricane: "/static/icons/hurricane.png",
+    storm: "/static/icons/storm.png"
   };
   const resourceMeta = {
     shelter: { countField: "spaceLeft", countLabel: "Beds left", statusOptions: ["open", "limited", "full"] },
