@@ -1,9 +1,11 @@
 import os
-import sqlite3
 from copy import deepcopy
+
+import psycopg
 import requests
-from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
+from flask import Flask, jsonify, render_template, request
+from psycopg.rows import dict_row
 
 # LOOKUP: BACKEND-SETUP
 # This section loads environment variables, creates the Flask app, and defines the
@@ -16,23 +18,24 @@ STATIC_DIRECTORY = os.path.join(
     "newIcons",
 )
 app = Flask(__name__, static_folder=STATIC_DIRECTORY, static_url_path="/static/icons")
-DATABASE_PATH = os.path.join(app.root_path, "crisiscloud.db")
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 NWS_BASE = "https://api.weather.gov"
 NWS_UA = os.getenv("NWS_USER_AGENT", "CrisisCloud/1.0 (demo@example.com)")
 
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL is required in the .env file.")
+
 # LOOKUP: BACKEND-RESOURCE-DATA
-# Resource records now live in the SQLite database file at DATABASE_PATH. Keeping the
-# source of truth in one place makes multi-user demos easier to manage because Flask,
-# the org portal, and every browser session all read the same saved resource rows.
+# Resource records now live in the hosted Postgres database configured by
+# DATABASE_URL. Keeping the source of truth in one place lets every browser and
+# every Flask instance read the same shared data instead of relying on local files.
 
 # LOOKUP: BACKEND-RESOURCE-SERIALIZE
-# The frontend should never work directly with raw SQLite rows, so these helpers
-# normalize database records into the same JSON shape the frontend already expects.
+# The frontend should never work directly with raw database rows, so these helpers
+# normalize Postgres records into the same JSON shape the frontend already expects.
 def get_db_connection():
-    conn = sqlite3.connect(DATABASE_PATH)
-    conn.row_factory = sqlite3.Row
-    return conn
+    return psycopg.connect(DATABASE_URL, row_factory=dict_row)
 
 
 def row_to_resource(row):
@@ -42,16 +45,18 @@ def row_to_resource(row):
 
 def fetch_all_resources():
     with get_db_connection() as conn:
-        rows = conn.execute(
-            """
-            SELECT
-                id, type, name, city, address, lat, lon, status, phone,
-                spaceLeft, foodLeft, unitsAvailable, trucksAvailable,
-                bedsAvailable, towTrucksAvailable, updated_at
-            FROM resources
-            ORDER BY rowid
-            """
-        ).fetchall()
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT
+                    id, type, name, city, address, lat, lon, status, phone,
+                    "spaceLeft", "foodLeft", "unitsAvailable", "trucksAvailable",
+                    "bedsAvailable", "towTrucksAvailable", updated_at
+                FROM public.resources
+                ORDER BY city, type, name
+                """
+            )
+            rows = cur.fetchall()
     return [row_to_resource(row) for row in rows]
 
 
@@ -69,34 +74,34 @@ RESOURCE_COUNT_FIELDS = {
 
 
 # LOOKUP: BACKEND-DATABASE-SETUP
-# SQLite gives the demo a lightweight persistent backend without changing how the
-# frontend talks to Flask. The app auto-creates the database file and schema, while
-# the saved rows inside crisiscloud.db remain the single source of truth.
+# Supabase provides the hosted Postgres database. This startup check ensures the
+# expected table exists so the app fails early with a clear error if the schema is
+# missing or the connection string is invalid.
 def init_db():
     with get_db_connection() as conn:
-        conn.execute(
-            """
-            CREATE TABLE IF NOT EXISTS resources (
-                id TEXT PRIMARY KEY,
-                type TEXT NOT NULL,
-                name TEXT NOT NULL,
-                city TEXT NOT NULL,
-                address TEXT,
-                lat REAL NOT NULL,
-                lon REAL NOT NULL,
-                status TEXT NOT NULL,
-                phone TEXT,
-                spaceLeft INTEGER,
-                foodLeft INTEGER,
-                unitsAvailable INTEGER,
-                trucksAvailable INTEGER,
-                bedsAvailable INTEGER,
-                towTrucksAvailable INTEGER,
-                updated_at TEXT DEFAULT CURRENT_TIMESTAMP
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS public.resources (
+                    id text PRIMARY KEY,
+                    type text NOT NULL,
+                    name text NOT NULL,
+                    city text NOT NULL,
+                    address text,
+                    lat double precision NOT NULL,
+                    lon double precision NOT NULL,
+                    status text NOT NULL,
+                    phone text,
+                    "spaceLeft" integer,
+                    "foodLeft" integer,
+                    "unitsAvailable" integer,
+                    "trucksAvailable" integer,
+                    "bedsAvailable" integer,
+                    "towTrucksAvailable" integer,
+                    updated_at timestamp with time zone DEFAULT now()
+                )
+                """
             )
-            """
-        )
-
         conn.commit()
 
 
@@ -155,19 +160,17 @@ def nws_get(url: str):
         url,
         headers={
             "User-Agent": NWS_UA,
-            "Accept": "application/geo+json"  # commonly supported by NWS endpoints
+            "Accept": "application/geo+json"
         },
         timeout=20
     )
 
-    # If NWS returns an error, try to capture JSON detail for debugging
     try:
         data = r.json()
     except Exception:
         data = {"raw_text": r.text}
 
     if not r.ok:
-        # Return structured error so your frontend can show "unavailable"
         raise requests.HTTPError(
             f"NWS HTTP {r.status_code} for {url}",
             response=r
@@ -182,6 +185,7 @@ def nws_get(url: str):
 @app.route("/")
 def home():
     return render_template("crisisCloud.html")
+
 
 @app.get("/favicon.ico")
 def favicon():
@@ -203,38 +207,40 @@ def update_resource(resource_id):
 
     try:
         with get_db_connection() as conn:
-            row = conn.execute(
-                """
-                SELECT
-                    id, type, name, city, address, lat, lon, status, phone,
-                    spaceLeft, foodLeft, unitsAvailable, trucksAvailable,
-                    bedsAvailable, towTrucksAvailable, updated_at
-                FROM resources
-                WHERE id = ?
-                """,
-                (resource_id,),
-            ).fetchone()
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT
+                        id, type, name, city, address, lat, lon, status, phone,
+                        "spaceLeft", "foodLeft", "unitsAvailable", "trucksAvailable",
+                        "bedsAvailable", "towTrucksAvailable", updated_at
+                    FROM public.resources
+                    WHERE id = %s
+                    """,
+                    (resource_id,),
+                )
+                row = cur.fetchone()
 
-            if row is None:
-                return jsonify({"error": "Resource not found"}), 404
+                if row is None:
+                    return jsonify({"error": "Resource not found"}), 404
 
-            resource = row_to_resource(row)
-            updated = merge_resource_update(resource, payload)
-            count_field = RESOURCE_COUNT_FIELDS.get(resource["type"])
+                resource = row_to_resource(row)
+                updated = merge_resource_update(resource, payload)
+                count_field = RESOURCE_COUNT_FIELDS.get(resource["type"])
 
-            conn.execute(
-                f"""
-                UPDATE resources
-                SET status = ?, phone = ?, {count_field} = ?, updated_at = CURRENT_TIMESTAMP
-                WHERE id = ?
-                """,
-                (
-                    updated["status"],
-                    updated.get("phone"),
-                    updated.get(count_field),
-                    resource_id,
-                ),
-            )
+                cur.execute(
+                    f"""
+                    UPDATE public.resources
+                    SET status = %s, phone = %s, "{count_field}" = %s, updated_at = now()
+                    WHERE id = %s
+                    """,
+                    (
+                        updated["status"],
+                        updated.get("phone"),
+                        updated.get(count_field),
+                        resource_id,
+                    ),
+                )
             conn.commit()
     except (TypeError, ValueError):
         return jsonify({"error": "Invalid update payload"}), 400
@@ -249,7 +255,6 @@ def update_resource(resource_id):
 # a single JSON payload that the dashboard can render.
 @app.get("/api/weather/live")
 def weather_live():
-    # Validate query params
     try:
         lat = float(request.args["lat"])
         lon = float(request.args["lon"])
@@ -259,11 +264,9 @@ def weather_live():
         }), 400
 
     try:
-        # 1) Resolve /points -> get station + forecast URLs
         points = nws_get(f"{NWS_BASE}/points/{lat},{lon}")
 
         if "properties" not in points:
-            # Print the unexpected payload for debugging
             print("Unexpected /points response:", points)
             return jsonify({
                 "error": "Unexpected response from NWS /points endpoint",
@@ -272,7 +275,6 @@ def weather_live():
 
         p = points["properties"]
 
-        # 2) Current observation (stations -> latest)
         current = None
         stations_url = p.get("observationStations")
 
@@ -287,7 +289,7 @@ def weather_live():
                     op = obs.get("properties", {})
 
                     temp_c = (op.get("temperature") or {}).get("value")
-                    temp_f = (temp_c * 9/5 + 32) if temp_c is not None else None
+                    temp_f = (temp_c * 9 / 5 + 32) if temp_c is not None else None
 
                     current = {
                         "station_id": station_id,
@@ -296,10 +298,8 @@ def weather_live():
                         "text_description": op.get("textDescription"),
                     }
 
-        # 3) Weekly forecast for the Hampton Roads area / current map center
         forecast = extract_weekly_forecast(p)
 
-        # 4) Active alerts for this point
         alerts_data = nws_get(f"{NWS_BASE}/alerts/active?point={lat},{lon}")
         alert_features = alerts_data.get("features", [])
 
@@ -317,9 +317,7 @@ def weather_live():
         return jsonify({"current": current, "forecast": forecast, "alerts": alerts})
 
     except requests.HTTPError as e:
-        # Print server-side so you can see it in your terminal
         print("NWS HTTPError:", str(e))
-        # Also try to include NWS response body if present
         body = None
         try:
             body = e.response.json() if e.response is not None else None
@@ -349,3 +347,4 @@ init_db()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
+
