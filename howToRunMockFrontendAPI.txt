@@ -43,10 +43,18 @@ CloudCrisis_Backend/
 ├── README.md
 ├── crisisCloudBackend.py
 ├── crisiscloud.db
+├── newIcons/
+│   ├── ambulance.png
+│   ├── flood.png
+│   ├── foodBank.png
+│   ├── hurricane.png
+│   ├── incident.png
+│   ├── police.png
+│   ├── shelter.png
+│   ├── storm.png
+│   └── towing.png
 └── templates/
-    ├── crisisCloud.html
-    └── CrisisCloud_Application/
-        └── newIcons/
+    └── crisisCloud.html
 ```
 
 ## Install Dependencies
@@ -77,6 +85,18 @@ The application now uses this SQLite database file:
 C:\Users\brand\OneDrive\Documents\CloudCrisis_Backend\crisiscloud.db
 ```
 
+## Icons Folder
+
+The application now serves icons from the root `newIcons` folder.
+
+Expected location:
+
+```text
+C:\Users\brand\OneDrive\Documents\CloudCrisis_Backend\newIcons
+```
+
+Teammates need to download the icon files and place them inside that `newIcons` folder. If the icon files are missing, or if the folder is placed inside the wrong directory, the website may open but the map markers, legend icons, filter icons, and incident icons will not appear.
+
 ## What Teammates Need
 
 If a teammate wants to run the app and see the newest shelters, food banks, police stations, fire stations, hospitals, and towing services, they should have:
@@ -84,8 +104,8 @@ If a teammate wants to run the app and see the newest shelters, food banks, poli
 - `crisisCloudBackend.py`
 - `crisiscloud.db`
 - `.env`
+- `newIcons/`
 - `templates/crisisCloud.html`
-- `templates/CrisisCloud_Application/newIcons/`
 
 If a teammate does not have the latest `crisiscloud.db`, they can still run the site, but they may not see the newest city data that has already been added to the database.
 
@@ -159,7 +179,6 @@ http://127.0.0.1:5000/api/weather/live?lat=36.9&lon=-76.3
   - `POST /api/resources/<resource_id>`
 - The frontend polls the backend so updates can appear after refresh or during the demo polling cycle.
 - Resource updates are now stored in SQLite, so they persist after restarting the app.
-- The backend will seed the database automatically if the database starts empty.
 
 ## How To Share The Latest Changes With The Team
 
@@ -169,7 +188,7 @@ The easiest way is to share the latest version of:
 crisiscloud.db
 ```
 
-If a teammate replaces their local `crisiscloud.db` with the newest one, they will see the latest city data the next time they run the app.
+Teammates should also pull the latest code and make sure they have the current `newIcons` folder in the project root.
 
 ## Adding More Real Locations
 
@@ -177,9 +196,8 @@ To add more real locations later:
 
 1. Get the real address.
 2. Find the latitude and longitude.
-3. Add the record to the backend seed list in `crisisCloudBackend.py`.
-4. Insert or update the record in `crisiscloud.db`.
-5. Restart the app or refresh the page.
+3. Insert or update the record in `crisiscloud.db`.
+4. Restart the app or refresh the page.
 
 ## Common Issues
 
@@ -190,6 +208,13 @@ Make sure `crisisCloud.html` is inside the `templates` folder and that the Flask
 ```python
 return render_template("crisisCloud.html")
 ```
+
+### Icons Not Showing
+
+- Confirm the `newIcons` folder exists in the project root
+- Confirm the PNG files are inside `newIcons`
+- Do not place `newIcons` inside `templates`
+- Restart Flask after adding or moving icon files
 
 ### Weather Not Loading
 
@@ -222,6 +247,7 @@ crisiscloud.db
 
 - This application currently uses live weather data from the National Weather Service.
 - Resource data is stored in a local SQLite database.
+- Icon files are served from the root `newIcons` folder.
 - The frontend and API are designed so the site still behaves the same while the database grows.
-- The easiest way to keep teammates synced is to share both the latest code and the latest `crisiscloud.db` file.
+- The easiest way to keep teammates synced is to share the latest code, the latest `crisiscloud.db`, and the current `newIcons` folder.
 
