@@ -1,14 +1,14 @@
-# CrisisCloud (Flask + Leaflet + SQLite + NWS Weather API)
+# CrisisCloud (Flask + Leaflet + Supabase Postgres + NWS Weather API)
 
 CrisisCloud is a Flask web application that serves a Leaflet-based frontend and pulls live weather, weekly forecast data, and active alerts from the National Weather Service (`weather.gov` / `api.weather.gov`) based on the current map center.
 
-This version of the application uses a local SQLite database file named `crisiscloud.db` to store shelters, food banks, police stations, fire stations, hospitals, and towing services. Weather data is still retrieved live from the National Weather Service API.
+This version of the application uses a shared Supabase Postgres database for shelters, food banks, police stations, fire stations, hospitals, and towing services. Weather data is still retrieved live from the National Weather Service API.
 
 ## Current Features
 
 - Live Leaflet map with custom resource icons
 - Live weather, alerts, and weekly forecast from the National Weather Service
-- SQLite-backed shared resource data
+- Supabase-backed shared resource data
 - Real-world locations for shelters, food banks, police, fire, hospitals, and towing services
 - City filtering for:
   - All
@@ -17,6 +17,7 @@ This version of the application uses a local SQLite database file named `crisisc
   - Portsmouth
   - Suffolk
   - Virginia Beach
+- Resource filter panel for combining visible categories
 - Organization login panel for updating resource status, phone number, and availability
 - Emergency Contact Directory split into:
   - Police Stations
@@ -26,7 +27,6 @@ This version of the application uses a local SQLite database file named `crisisc
 - Separate Storm Shelter Directory and Food Bank Directory
 - Collapsible directory sections
 - Click-to-focus behavior that scrolls to the map and shows the selected location
-- Local network hosting support for two-computer demos
 
 ## Prerequisites
 
@@ -42,7 +42,6 @@ CloudCrisis_Backend/
 ├── .env
 ├── README.md
 ├── crisisCloudBackend.py
-├── crisiscloud.db
 ├── newIcons/
 │   ├── ambulance.png
 │   ├── flood.png
@@ -62,7 +61,7 @@ CloudCrisis_Backend/
 From a terminal in the project folder, run:
 
 ```powershell
-pip install flask requests python-dotenv
+pip install flask requests python-dotenv psycopg[binary]
 ```
 
 ## Environment Variables
@@ -71,23 +70,30 @@ Create a file named `.env` in the same directory as `crisisCloudBackend.py` with
 
 ```env
 NWS_USER_AGENT=CrisisCloud/1.0 (your-email@school.edu)
+DATABASE_URL=postgresql://postgres.PROJECT_REF:YOUR_PASSWORD@aws-0-REGION.pooler.supabase.com:5432/postgres
 ```
 
-This User-Agent is required by the National Weather Service.
+Notes:
 
-Do not place the `.env` file inside the `templates` folder.
+- `NWS_USER_AGENT` is required by the National Weather Service
+- `DATABASE_URL` is the Supabase Postgres session pooler connection string
+- do not place the `.env` file inside the `templates` folder
 
-## Database File
+## Shared Database Setup
 
-The application now uses this SQLite database file:
+The app now uses a shared Supabase database instead of the local `crisiscloud.db` file.
 
-```text
-C:\Users\brand\OneDrive\Documents\CloudCrisis_Backend\crisiscloud.db
-```
+That means:
+
+- teammates do not need the same local `.db` file anymore
+- all status changes save to the same shared database
+- anyone using the same backend and same `.env` connection string will read and write the same data
+
+If a teammate is connecting to the same Supabase project, make sure they have the same `DATABASE_URL` in their `.env`.
 
 ## Icons Folder
 
-The application now serves icons from the root `newIcons` folder.
+The application serves icons from the root `newIcons` folder.
 
 Expected location:
 
@@ -102,12 +108,11 @@ Teammates need to download the icon files and place them inside that `newIcons` 
 If a teammate wants to run the app and see the newest shelters, food banks, police stations, fire stations, hospitals, and towing services, they should have:
 
 - `crisisCloudBackend.py`
-- `crisiscloud.db`
 - `.env`
 - `newIcons/`
 - `templates/crisisCloud.html`
 
-If a teammate does not have the latest `crisiscloud.db`, they can still run the site, but they may not see the newest city data that has already been added to the database.
+They also need the `.env` file to point to the same Supabase project using the same `DATABASE_URL`.
 
 ## Run The Website
 
@@ -130,9 +135,20 @@ python .\crisisCloudBackend.py
 http://127.0.0.1:5000/
 ```
 
+## How Teammates Access The Shared Database
+
+To use the same shared data as everyone else, teammates should:
+
+1. Use the same codebase
+2. Use the same `newIcons` folder
+3. Use the same Supabase `DATABASE_URL` in `.env`
+4. Run the Flask app or connect to the same deployed backend later
+
+Because the database is now hosted in Supabase, status updates are no longer tied to one local SQLite file.
+
 ## Run Across Two Computers On The Same Network
 
-The Flask app is configured to listen on the local network.
+If the Flask app is still running locally on one computer, teammates can still test together on the same network.
 
 When you start the app, the terminal should show something like:
 
@@ -151,7 +167,7 @@ To test on a second computer:
 http://192.168.0.159:5000
 ```
 
-Both computers will then connect to the same running backend and shared `crisiscloud.db` file.
+Both computers will then connect to the same running backend, and the backend will read and write the same shared Supabase database.
 
 ## Optional: Use a Virtual Environment
 
@@ -160,7 +176,7 @@ If the team wants isolated dependencies:
 ```powershell
 python -m venv .venv
 .\.venv\Scripts\Activate.ps1
-pip install flask requests python-dotenv
+pip install flask requests python-dotenv psycopg[binary]
 python .\crisisCloudBackend.py
 ```
 
@@ -177,27 +193,28 @@ http://127.0.0.1:5000/api/weather/live?lat=36.9&lon=-76.3
 - The app serves resource data through:
   - `GET /api/resources`
   - `POST /api/resources/<resource_id>`
-- The frontend polls the backend so updates can appear after refresh or during the demo polling cycle.
-- Resource updates are now stored in SQLite, so they persist after restarting the app.
+- The frontend polls the backend so updates can appear after refresh or during the demo polling cycle
+- Resource updates are now stored in Supabase Postgres instead of a local SQLite database
 
 ## How To Share The Latest Changes With The Team
 
-The easiest way is to share the latest version of:
+The easiest way is to share:
 
-```text
-crisiscloud.db
-```
+- the latest code
+- the latest `newIcons` folder
+- the correct `.env` format
+- the shared Supabase project connection string
 
-Teammates should also pull the latest code and make sure they have the current `newIcons` folder in the project root.
+Teammates no longer need a shared copy of `crisiscloud.db` for live app data once they are using the Supabase-backed backend.
 
 ## Adding More Real Locations
 
 To add more real locations later:
 
-1. Get the real address.
-2. Find the latitude and longitude.
-3. Insert or update the record in `crisiscloud.db`.
-4. Restart the app or refresh the page.
+1. Get the real address
+2. Find the latitude and longitude
+3. Insert or update the record in the Supabase `resources` table
+4. Refresh the page or wait for polling
 
 ## Common Issues
 
@@ -228,26 +245,26 @@ return render_template("crisisCloud.html")
 - Keep it in the project root, not in `templates`
 - Restart Flask after editing it
 
-### Database Looks Out Of Date
+### Cannot Connect To Supabase
 
-If a teammate is missing newer city records, make sure they have the latest copy of:
-
-```text
-crisiscloud.db
-```
+- Confirm `DATABASE_URL` is present in `.env`
+- Confirm the password is correct
+- If direct connection fails, use the Supabase session pooler connection string
+- Confirm `psycopg[binary]` is installed
 
 ### Second Computer Cannot Connect
 
-- Confirm both computers are on the same network
+- Confirm both computers are on the same network if you are still hosting Flask locally
 - Confirm the host computer is still running Flask
 - Confirm Windows Firewall allows Python on private networks
 - Use the host machine's network URL shown in the Flask terminal output
 
 ## Notes For The Team
 
-- This application currently uses live weather data from the National Weather Service.
-- Resource data is stored in a local SQLite database.
-- Icon files are served from the root `newIcons` folder.
-- The frontend and API are designed so the site still behaves the same while the database grows.
-- The easiest way to keep teammates synced is to share the latest code, the latest `crisiscloud.db`, and the current `newIcons` folder.
+- This application currently uses live weather data from the National Weather Service
+- Resource data is now stored in Supabase Postgres
+- Icon files are served from the root `newIcons` folder
+- The frontend and API are designed so the site still behaves the same while the database grows
+- Supabase makes the database shared, but the Flask app still needs to be deployed if the team wants full access from anywhere without relying on one local host computer
+
 
