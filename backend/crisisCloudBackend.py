@@ -13,8 +13,6 @@ load_dotenv()
 
 STATIC_DIRECTORY = os.path.join(
     os.path.dirname(os.path.abspath(__file__)),
-    "templates",
-    "CrisisCloud_Application",
     "newIcons",
 )
 app = Flask(__name__, static_folder=STATIC_DIRECTORY, static_url_path="/static/icons")
