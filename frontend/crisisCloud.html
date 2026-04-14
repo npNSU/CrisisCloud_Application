@@ -496,6 +496,47 @@
       font-size: 11px;
       color: var(--text-muted);
     }
+    .insuranceGrid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .insuranceCard {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.06), rgba(255,255,255,0.03));
+      box-shadow: var(--shadow-soft);
+    }
+    .insuranceName {
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
+    .insuranceNote {
+      font-size: 12px;
+      line-height: 1.45;
+      color: var(--text-small);
+    }
+    .insuranceLink {
+      width: fit-content;
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(96, 165, 250, 0.14);
+      border: 1px solid rgba(96, 165, 250, 0.22);
+      color: var(--text-main);
+      font-size: 12px;
+      font-weight: 800;
+      text-decoration: none;
+    }
+    .insuranceLink:hover {
+      color: var(--text-main);
+      background: rgba(96, 165, 250, 0.22);
+      border-color: rgba(96, 165, 250, 0.35);
+    }
     .contactList {
       display: grid;
       gap: 10px;
@@ -806,6 +847,40 @@
       <div class="weatherTitle">Hampton Roads Weekly Forecast</div>
       <div class="forecastGrid" id="forecastGrid">
         <div class="forecastCard">Forecast loading...</div>
+      </div>
+
+      <div class="weatherTitle">Home And Auto Insurance Help</div>
+      <div class="insuranceGrid">
+        <div class="insuranceCard">
+          <div class="insuranceName">State Farm</div>
+          <div class="insuranceNote">One of the largest insurers in the U.S. with strong home and auto bundle options.</div>
+          <a class="insuranceLink" href="https://www.statefarm.com" target="_blank" rel="noopener noreferrer">Visit State Farm</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">GEICO</div>
+          <div class="insuranceNote">Known for affordable auto insurance and an easy online claims process.</div>
+          <a class="insuranceLink" href="https://www.geico.com" target="_blank" rel="noopener noreferrer">Visit GEICO</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">Allstate</div>
+          <div class="insuranceNote">Offers disaster recovery tools, claim tracking, and strong home coverage options.</div>
+          <a class="insuranceLink" href="https://www.allstate.com" target="_blank" rel="noopener noreferrer">Visit Allstate</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">Progressive</div>
+          <div class="insuranceNote">Competitive auto pricing and support for higher-risk drivers.</div>
+          <a class="insuranceLink" href="https://www.progressive.com" target="_blank" rel="noopener noreferrer">Visit Progressive</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">USAA</div>
+          <div class="insuranceNote">Highly rated for customer satisfaction for military members and their families.</div>
+          <a class="insuranceLink" href="https://www.usaa.com" target="_blank" rel="noopener noreferrer">Visit USAA</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">Liberty Mutual</div>
+          <div class="insuranceNote">Flexible home coverage options with disaster-specific add-ons.</div>
+          <a class="insuranceLink" href="https://www.libertymutual.com" target="_blank" rel="noopener noreferrer">Visit Liberty Mutual</a>
+        </div>
       </div>
     </section>
 
