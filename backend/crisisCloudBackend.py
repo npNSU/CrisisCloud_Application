@@ -2,7 +2,7 @@ import os
 import sqlite3
 from copy import deepcopy
 import requests
-from flask import Flask, request, jsonify, render_template, send_from_directory
+from flask import Flask, request, jsonify, render_template
 from dotenv import load_dotenv
 
 # LOOKUP: BACKEND-SETUP
@@ -11,8 +11,13 @@ from dotenv import load_dotenv
 # weather endpoints can reuse one base URL and one configurable User-Agent.
 load_dotenv()
 
-app = Flask(__name__)
-ICON_DIRECTORY = os.path.join(app.root_path, "templates", "CrisisCloud_Application", "newIcons")
+STATIC_DIRECTORY = os.path.join(
+    os.path.dirname(os.path.abspath(__file__)),
+    "templates",
+    "CrisisCloud_Application",
+    "newIcons",
+)
+app = Flask(__name__, static_folder=STATIC_DIRECTORY, static_url_path="/static/icons")
 DATABASE_PATH = os.path.join(app.root_path, "crisiscloud.db")
 
 NWS_BASE = "https://api.weather.gov"
@@ -179,12 +184,6 @@ def nws_get(url: str):
 @app.route("/")
 def home():
     return render_template("crisisCloud.html")
-
-
-@app.get("/assets/icons/<path:filename>")
-def icon_assets(filename):
-    return send_from_directory(ICON_DIRECTORY, filename)
-
 
 @app.get("/favicon.ico")
 def favicon():
