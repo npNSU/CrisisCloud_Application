@@ -60,6 +60,21 @@ def fetch_all_resources():
     return [row_to_resource(row) for row in rows]
 
 
+def fetch_all_reports():
+    with get_db_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT id, type, city, address, lat, lon,
+                    description, reporter_name, submitted_at
+                FROM public.reports
+                ORDER BY submitted_at DESC
+                LIMIT 50
+                """
+            )
+            rows = cur.fetchall()
+    return [dict(row) for row in rows]
+
 # LOOKUP: BACKEND-RESOURCE-METADATA
 # Different resource types track different count fields. This lookup table lets the
 # update logic stay generic instead of hard-coding a separate branch for every type.
@@ -76,7 +91,6 @@ RESOURCE_COUNT_FIELDS = {
 # LOOKUP: BACKEND-DATABASE-SETUP
 # Supabase provides the hosted Postgres database. This startup check ensures the
 # expected table exists so the app fails early with a clear error if the schema is
-# missing or the connection string is invalid.
 def init_db():
     with get_db_connection() as conn:
         with conn.cursor() as cur:
@@ -102,9 +116,23 @@ def init_db():
                 )
                 """
             )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS public.reports (
+                    id serial PRIMARY KEY,
+                    type text NOT NULL,
+                    city text NOT NULL,
+                    address text,
+                    lat double precision,
+                    lon double precision,
+                    description text NOT NULL,
+                    reporter_name text,
+                    submitted_at timestamp with time zone DEFAULT now()
+                )
+                """
+            )
         conn.commit()
-
-
+# missing or the connection string is invalid.
 # LOOKUP: BACKEND-RESOURCE-UPDATES
 # This function applies organization portal edits to one resource record. It updates
 # shared fields like status and phone, then updates the type-specific capacity field
@@ -186,6 +214,9 @@ def nws_get(url: str):
 def home():
     return render_template("crisisCloud.html")
 
+@app.route("/simulation")
+def simulation():
+    return render_template("simulation.html")
 
 @app.get("/favicon.ico")
 def favicon():
@@ -339,6 +370,56 @@ def weather_live():
         return jsonify({"error": "Server error", "details": str(e)}), 500
 
 
+
+# LOOKUP: BACKEND-REPORTS-API
+@app.get("/api/reports")
+def get_reports():
+    try:
+        reports = fetch_all_reports()
+        for r in reports:
+            if r.get("submitted_at"):
+                r["submitted_at"] = r["submitted_at"].isoformat()
+        return jsonify({"reports": reports})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.post("/api/reports")
+def create_report():
+    payload = request.get_json(silent=True) or {}
+    report_type = str(payload.get("type", "")).strip()
+    city = str(payload.get("city", "")).strip()
+    description = str(payload.get("description", "")).strip()
+    if not report_type or not city or not description:
+        return jsonify({"error": "type, city, and description are required"}), 400
+    address = str(payload.get("address", "")).strip() or None
+    lat = payload.get("lat")
+    lon = payload.get("lon")
+    reporter_name = str(payload.get("reporter_name", "")).strip() or None
+    try:
+        lat = float(lat) if lat is not None else None
+        lon = float(lon) if lon is not None else None
+    except (TypeError, ValueError):
+        lat = None
+        lon = None
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO public.reports
+                        (type, city, address, lat, lon, description, reporter_name)
+                    VALUES (%s, %s, %s, %s, %s, %s, %s)
+                    RETURNING id, submitted_at
+                    """,
+                    (report_type, city, address, lat, lon, description, reporter_name),
+                )
+                row = cur.fetchone()
+            conn.commit()
+        return jsonify({"success": True, "id": row["id"], "submitted_at": row["submitted_at"].isoformat(), "reports": fetch_all_reports()}), 201
+    except Exception as e:
+        print("Report insert error:", str(e))
+        return jsonify({"error": "Failed to save report"}), 500
 # LOOKUP: BACKEND-APP-START
 # Running this file directly starts the Flask development server. This is the entry
 # point teammates use from the terminal during local development and demo prep.
