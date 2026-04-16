@@ -1049,18 +1049,18 @@
 <!-- LOOKUP: FRONTEND-LOGIN-MODAL
      This modal is the lightweight organization login UI used to open the
      shared update controls without leaving the main dashboard. -->
+
 <div class="backdrop" id="loginBackdrop">
   <div class="modal">
-    <div class="row"><h2>Login</h2><button class="ghost" id="btnCloseLogin">X</button></div>
-    <div class="label">Organization</div>
-    <select id="loginOrg" style="width:100%"></select>
+    <div class="row"><h2>Organization Login</h2><button class="ghost" id="btnCloseLogin">X</button></div>
+    <div id="loginError" style="display:none;background:rgba(248,113,113,.12);border:1px solid rgba(248,113,113,.3);border-radius:10px;padding:8px 12px;font-size:12px;color:#fca5a5;margin-bottom:10px;"></div>
+    <div class="label">Username</div>
+    <input id="loginUser" type="text" placeholder="Your organization username" style="width:100%" />
     <div class="label">Password</div>
-    <input id="loginPass" type="password" value="crisiscloud" style="width:100%" />
+    <input id="loginPass" type="password" placeholder="Your password" style="width:100%" />
     <button class="primary" id="btnDoLogin" style="width:100%; margin-top:15px;">Access Account</button>
   </div>
-</div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</div><script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
   // LOOKUP: FRONTEND-STATE
   // This section defines the shared frontend state for resources, filters,
@@ -1084,7 +1084,6 @@
   const cityFilter = document.getElementById("cityFilter");
   const mapElement = document.getElementById("map");
   const loginBackdrop = document.getElementById("loginBackdrop");
-  const loginOrg = document.getElementById("loginOrg");
   const orgLoggedOut = document.getElementById("orgLoggedOut");
   const orgPanel = document.getElementById("orgPanel");
   const orgName = document.getElementById("orgName");
@@ -1297,14 +1296,8 @@
   // LOOKUP: FRONTEND-SIDEBAR-DIRECTORIES
   // These renderers build the login dropdown plus the emergency contact and
   // shelter/food directory cards shown in the right-side panel.
-  function renderLoginOptions() {
-    loginOrg.innerHTML = resources.map((resource) =>
-      `<option value="${resource.id}">${resource.name}</option>`
-    ).join("");
-  }
-
-  function renderEmergencyCards(targetElement, resourcesForDirectory, emptyMessage) {
-    if (resourcesForDirectory.length === 0) {
+  function renderDirectoryCards(targetElement, resourcesForDirectory, emptyMessage) {
+    if (!resourcesForDirectory || resourcesForDirectory.length === 0) {
       targetElement.innerHTML = `<div class="contactCard">${emptyMessage}</div>`;
       return;
     }
@@ -1326,43 +1319,28 @@
     toggleDirectorySection(hospitalSection, activeTypeFilters.has("hospital"));
     toggleDirectorySection(towingSection, activeTypeFilters.has("towing"));
 
-    renderEmergencyCards(
+    renderDirectoryCards(
       policeDirectory,
       visibleResources.filter((resource) => resource.type === "police"),
       "No police station information available."
     );
-    renderEmergencyCards(
+    renderDirectoryCards(
       fireDirectory,
       visibleResources.filter((resource) => resource.type === "fire"),
       "No fire station information available."
     );
-    renderEmergencyCards(
+    renderDirectoryCards(
       hospitalDirectory,
       visibleResources.filter((resource) => resource.type === "hospital"),
       "No hospital information available."
     );
-    renderEmergencyCards(
+    renderDirectoryCards(
       towingDirectory,
       visibleResources.filter((resource) => resource.type === "towing"),
       "No towing information available."
     );
   }
 
-  function renderDirectoryCards(targetElement, resourcesForDirectory, emptyMessage) {
-    if (resourcesForDirectory.length === 0) {
-      targetElement.innerHTML = `<div class="contactCard">${emptyMessage}</div>`;
-      return;
-    }
-
-    targetElement.innerHTML = resourcesForDirectory.map((resource) => `
-      <button class="contactCard directoryCardButton" type="button" data-resource-id="${resource.id}">
-        <div class="contactTitle">${iconImageHtml(resourceIcons[resource.type] || resourceIcons.incident, resource.name)}${resource.name}</div>
-        <div class="contactMeta addressMeta">${resource.address || resource.city}</div>
-        <div class="contactMeta">Status: ${resource.status}</div>
-        <div class="contactMeta availabilityMeta">${resourceMetricLabel(resource)}</div>
-      </button>
-    `).join("");
-  }
 
   function renderShelterDirectory() {
     toggleDirectorySection(shelterSection, activeTypeFilters.has("shelter"));
@@ -1442,7 +1420,6 @@
 
     const data = await res.json();
     resources = data.resources || [];
-    renderLoginOptions();
     refreshFilteredViews();
 
     if (loggedInResourceId && resources.some((item) => item.id === loggedInResourceId)) {
@@ -1461,21 +1438,79 @@
     refreshWeatherForMapCenter();
   };
 
-  document.getElementById("btnDoLogin").onclick = () => {
-    loggedInResourceId = loginOrg.value;
-    orgLoggedOut.style.display = "none";
-    orgPanel.style.display = "block";
-    renderOrgControls();
-    loginBackdrop.style.display = "none";
+
+  document.getElementById("btnDoLogin").onclick = async () => {
+    const username = document.getElementById("loginUser").value.trim();
+    const password = document.getElementById("loginPass").value.trim();
+    const errorBox = document.getElementById("loginError");
+    errorBox.style.display = "none";
+    if (!username || !password) {
+      errorBox.textContent = "Please enter your username and password.";
+      errorBox.style.display = "block";
+      return;
+    }
+    try {
+      const res = await fetch("/api/login", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({username, password})
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        errorBox.textContent = data.error || "Invalid username or password.";
+        errorBox.style.display = "block";
+        return;
+      }
+      localStorage.setItem("cc_token", data.token);
+      localStorage.setItem("cc_resource_id", data.resource_id);
+      loggedInResourceId = data.resource_id;
+      orgLoggedOut.style.display = "none";
+      orgPanel.style.display = "block";
+      renderOrgControls();
+      loginBackdrop.style.display = "none";
+      document.getElementById("loginUser").value = "";
+      document.getElementById("loginPass").value = "";
+    } catch(e) {
+      errorBox.textContent = "Could not connect to the server. Please try again.";
+      errorBox.style.display = "block";
+    }
   };
 
-  document.getElementById("btnLogout").onclick = () => {
+  document.getElementById("btnLogout").onclick = async () => {
+    const token = localStorage.getItem("cc_token");
+    if (token) {
+      await fetch("/api/logout", {
+        method: "POST",
+        headers: {"Authorization": "Bearer " + token}
+      }).catch(() => {});
+    }
+    localStorage.removeItem("cc_token");
+    localStorage.removeItem("cc_resource_id");
     loggedInResourceId = null;
     orgLoggedOut.style.display = "block";
     orgPanel.style.display = "none";
   };
 
-  // LOOKUP: FRONTEND-ORG-SAVE
+  async function checkExistingSession() {
+    const token = localStorage.getItem("cc_token");
+    if (!token) return;
+    try {
+      const res = await fetch("/api/me", {
+        headers: {"Authorization": "Bearer " + token}
+      });
+      if (!res.ok) {
+        localStorage.removeItem("cc_token");
+        localStorage.removeItem("cc_resource_id");
+        return;
+      }
+      const data = await res.json();
+      loggedInResourceId = data.resource_id;
+      orgLoggedOut.style.display = "none";
+      orgPanel.style.display = "block";
+      renderOrgControls();
+    } catch(e) {}
+  }
+  checkExistingSession();  // LOOKUP: FRONTEND-ORG-SAVE
   // Saving an org update sends the edited status, contact number, and capacity
   // back to the Flask backend so every open dashboard sees the shared changes.
   document.getElementById("btnSaveOrgUpdate").onclick = async () => {
@@ -1671,6 +1706,7 @@
     });
 
   refreshWeatherForMapCenter();
+  window.setInterval(refreshWeatherForMapCenter, 60000);
   window.setInterval(() => {
     loadResources().catch(() => {});
   }, RESOURCE_POLL_MS);

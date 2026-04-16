@@ -1,6 +1,7 @@
 import os
+import bcrypt
+import secrets
 from copy import deepcopy
-
 import psycopg
 import requests
 from dotenv import load_dotenv
@@ -131,8 +132,29 @@ def init_db():
                 )
                 """
             )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS public.users (
+                    id serial PRIMARY KEY,
+                    username text UNIQUE NOT NULL,
+                    password_hash text NOT NULL,
+                    resource_id text REFERENCES public.resources(id),
+                    created_at timestamp with time zone DEFAULT now()
+                )
+                """
+            )
+            cur.execute(
+                """
+                CREATE TABLE IF NOT EXISTS public.sessions (
+                    token text PRIMARY KEY,
+                    user_id integer REFERENCES public.users(id),
+                    resource_id text,
+                    created_at timestamp with time zone DEFAULT now(),
+                    expires_at timestamp with time zone DEFAULT now() + interval '24 hours'
+                )
+                """
+            )
         conn.commit()
-# missing or the connection string is invalid.
 # LOOKUP: BACKEND-RESOURCE-UPDATES
 # This function applies organization portal edits to one resource record. It updates
 # shared fields like status and phone, then updates the type-specific capacity field
@@ -420,7 +442,112 @@ def create_report():
     except Exception as e:
         print("Report insert error:", str(e))
         return jsonify({"error": "Failed to save report"}), 500
-# LOOKUP: BACKEND-APP-START
+
+# LOOKUP: BACKEND-AUTH
+# These endpoints handle real authentication. Login checks the username and
+# password against bcrypt hashes in Supabase, creates a session token, and
+# returns it to the frontend. Logout deletes the token. Me verifies a token.
+@app.post("/api/login")
+def login():
+    payload = request.get_json(silent=True) or {}
+    username = str(payload.get("username", "")).strip().lower()
+    password = str(payload.get("password", "")).strip()
+    if not username or not password:
+        return jsonify({"error": "Username and password are required"}), 400
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    "SELECT id, password_hash, resource_id FROM public.users WHERE username = %s",
+                    (username,)
+                )
+                user = cur.fetchone()
+                if not user:
+                    return jsonify({"error": "Invalid username or password"}), 401
+                if not bcrypt.checkpw(password.encode(), user["password_hash"].encode()):
+                    return jsonify({"error": "Invalid username or password"}), 401
+                token = secrets.token_hex(32)
+                cur.execute(
+                    """
+                    INSERT INTO public.sessions (token, user_id, resource_id)
+                    VALUES (%s, %s, %s)
+                    """,
+                    (token, user["id"], user["resource_id"])
+                )
+            conn.commit()
+        return jsonify({"token": token, "resource_id": user["resource_id"]})
+    except Exception as e:
+        print("Login error:", str(e))
+        return jsonify({"error": "Login failed"}), 500
+
+
+@app.post("/api/logout")
+def logout():
+    token = request.headers.get("Authorization", "").replace("Bearer ", "").strip()
+    if not token:
+        return jsonify({"ok": True})
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute("DELETE FROM public.sessions WHERE token = %s", (token,))
+            conn.commit()
+    except Exception:
+        pass
+    return jsonify({"ok": True})
+
+
+@app.get("/api/me")
+def me():
+    token = request.headers.get("Authorization", "").replace("Bearer ", "").strip()
+    if not token:
+        return jsonify({"error": "No token"}), 401
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    SELECT s.resource_id, u.username
+                    FROM public.sessions s
+                    JOIN public.users u ON u.id = s.user_id
+                    WHERE s.token = %s AND s.expires_at > now()
+                    """,
+                    (token,)
+                )
+                row = cur.fetchone()
+        if not row:
+            return jsonify({"error": "Invalid or expired token"}), 401
+        return jsonify({"resource_id": row["resource_id"], "username": row["username"]})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@app.post("/api/register")
+def register():
+    payload = request.get_json(silent=True) or {}
+    username = str(payload.get("username", "")).strip().lower()
+    password = str(payload.get("password", "")).strip()
+    resource_id = str(payload.get("resource_id", "")).strip()
+    if not username or not password or not resource_id:
+        return jsonify({"error": "username, password, and resource_id are required"}), 400
+    password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+    try:
+        with get_db_connection() as conn:
+            with conn.cursor() as cur:
+                cur.execute(
+                    """
+                    INSERT INTO public.users (username, password_hash, resource_id)
+                    VALUES (%s, %s, %s)
+                    RETURNING id
+                    """,
+                    (username, password_hash, resource_id)
+                )
+                user_id = cur.fetchone()["id"]
+            conn.commit()
+        return jsonify({"ok": True, "id": user_id}), 201
+    except Exception as e:
+        if "unique" in str(e).lower():
+            return jsonify({"error": "Username already taken"}), 409
+        return jsonify({"error": str(e)}), 500# LOOKUP: BACKEND-APP-START
 # Running this file directly starts the Flask development server. This is the entry
 # point teammates use from the terminal during local development and demo prep.
 init_db()
