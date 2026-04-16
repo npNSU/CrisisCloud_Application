@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CrisisCloud - Hurricane Irene Simulation</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@3.11.1/dist/geosearch.css"/>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+    body{background:#0a1628;color:#e2e8f0;}
+
+    .topnav{background:#060e1c;border-bottom:1px solid rgba(96,165,250,.18);padding:0 20px;display:flex;align-items:center;flex-wrap:wrap;}
+    .topnav-brand{font-size:18px;font-weight:800;color:#f8fafc;padding:14px 18px 14px 0;border-right:1px solid rgba(96,165,250,.12);margin-right:4px;}
+    .topnav a{display:inline-block;padding:14px 16px;font-size:13px;font-weight:700;color:#94a3b8;text-decoration:none;border-bottom:3px solid transparent;transition:color .2s;}
+    .topnav a:hover{color:#e2e8f0;}
+    .topnav a.active{color:#60a5fa;border-bottom:3px solid #60a5fa;}
+    .topnav-sub{font-size:11px;color:#475569;padding:14px 0 14px 6px;}
+    .sim-badge{display:inline-flex;align-items:center;gap:5px;margin-left:auto;padding:6px 12px;background:rgba(248,113,113,.14);border:1px solid rgba(248,113,113,.3);border-radius:999px;font-size:11px;font-weight:800;color:#fca5a5;}
+    .sdot{width:7px;height:7px;border-radius:50%;background:#f87171;animation:blink 1.2s infinite;}
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+    .hdr{background:#0a1425;border-bottom:1px solid rgba(248,113,113,.3);padding:12px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+    .logo{font-size:20px;font-weight:800;color:#f8fafc;}
+    .live-pill{display:flex;align-items:center;gap:6px;background:rgba(248,113,113,.18);border:1px solid rgba(248,113,113,.4);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:800;color:#fca5a5;}
+    .clock-date{font-size:11px;color:#fbbf24;font-weight:800;text-align:right;}
+    .clock-time{font-size:20px;font-weight:800;color:#f8fafc;text-align:right;font-variant-numeric:tabular-nums;}
+    .alert-strip{background:rgba(248,113,113,.12);border-bottom:1px solid rgba(248,113,113,.25);padding:8px 18px;display:flex;align-items:center;gap:10px;font-size:12px;flex-wrap:wrap;}
+
+    .steps-bar{display:flex;border-bottom:1px solid rgba(96,165,250,.12);background:#080f1e;padding:0 20px;overflow-x:auto;}
+    .step-btn{padding:11px 16px;font-size:12px;font-weight:700;color:#475569;background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;font-family:inherit;}
+    .step-btn.done{color:#34d399;}
+    .step-btn.done::before{content:'✓ ';}
+    .step-btn.active{color:#60a5fa;border-bottom:3px solid #60a5fa;}
+    .step-btn:hover{color:#e2e8f0;}
+
+    .step-panel{visibility:hidden;height:0;overflow:hidden;padding:0;}
+    .step-panel.visible{visibility:visible;height:auto;overflow:visible;padding:16px 20px;}
+
+    .step-card{background:rgba(16,28,52,0.92);border:1px solid rgba(96,165,250,.15);border-radius:18px;padding:20px;max-width:960px;margin:0 auto;}
+    .step-number{display:inline-block;background:rgba(96,165,250,.18);color:#60a5fa;font-size:11px;font-weight:800;letter-spacing:.1em;padding:4px 10px;border-radius:999px;margin-bottom:10px;}
+    .step-title{font-size:20px;font-weight:800;color:#f8fafc;margin-bottom:6px;}
+    .step-desc{font-size:14px;color:#94a3b8;line-height:1.7;margin-bottom:14px;}
+    .step-desc strong{color:#e2e8f0;font-weight:700;}
+
+    .callout{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.22);border-radius:12px;padding:12px 14px;margin:10px 0;font-size:13px;color:#fde68a;line-height:1.6;}
+    .callout-red{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.22);border-radius:12px;padding:12px 14px;margin:10px 0;font-size:13px;color:#fca5a5;line-height:1.6;}
+    .callout-green{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.22);border-radius:12px;padding:12px 14px;margin:10px 0;font-size:13px;color:#6ee7b7;line-height:1.6;}
+
+    .step-nav{display:flex;justify-content:space-between;align-items:center;margin-top:18px;padding-top:14px;border-top:1px solid rgba(96,165,250,.1);}
+    .btn-nav{padding:10px 20px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;border:1px solid rgba(96,165,250,.25);background:rgba(96,165,250,.1);color:#93c5fd;font-family:inherit;}
+    .btn-nav:hover{background:rgba(96,165,250,.2);}
+    .btn-nav.primary{background:rgba(96,165,250,.85);color:#081023;border:none;}
+    .btn-nav.primary:hover{background:#60a5fa;}
+    .btn-nav:disabled{opacity:.35;cursor:not-allowed;}
+    .progress-text{font-size:12px;color:#475569;}
+
+    .leaflet-map{width:100%;border-radius:14px;border:1px solid rgba(96,165,250,.18);background:#0d1f3c;}
+    .leaflet-container{background:#0d1f3c !important;}
+    .map-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:8px;align-items:center;}
+    .loc-btn{padding:8px 14px;border-radius:10px;border:1px solid rgba(96,165,250,.25);background:rgba(96,165,250,.1);color:#93c5fd;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;}
+    .loc-btn:hover{background:rgba(96,165,250,.2);}
+
+    .card{background:rgba(16,28,52,0.92);border:1px solid rgba(96,165,250,.15);border-radius:18px;padding:16px;margin-bottom:12px;}
+    .sect-label{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#475569;margin-bottom:8px;}
+    .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 12px;}
+    @media(max-width:580px){.stat-row{grid-template-columns:repeat(2,1fr);}}
+    .stat{background:rgba(255,255,255,.05);border:1px solid rgba(96,165,250,.1);border-radius:12px;padding:10px 12px;}
+    .stat-l{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#475569;}
+    .stat-v{font-size:18px;font-weight:800;margin-top:3px;}
+    .red{color:#f87171;}.amber{color:#fbbf24;}.blue{color:#60a5fa;}.green{color:#34d399;}
+
+    .feed{display:flex;flex-direction:column;gap:7px;max-height:220px;overflow-y:auto;}
+    .feed::-webkit-scrollbar{width:3px;}
+    .feed::-webkit-scrollbar-thumb{background:rgba(96,165,250,.25);border-radius:3px;}
+    .fi{background:rgba(255,255,255,.04);border:1px solid rgba(96,165,250,.1);border-radius:10px;padding:9px 11px;}
+    .fi-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;gap:4px;flex-wrap:wrap;}
+    .ft{font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;}
+    .ft-flood{background:rgba(96,165,250,.18);color:#93c5fd;}
+    .ft-surge{background:rgba(248,113,113,.18);color:#fca5a5;}
+    .ft-wind{background:rgba(251,191,36,.18);color:#fde68a;}
+    .ft-power{background:rgba(167,139,250,.18);color:#c4b5fd;}
+    .ft-road{background:rgba(52,211,153,.18);color:#6ee7b7;}
+    .fi-time{font-size:10px;color:#475569;}
+    .fi-msg{font-size:12px;color:#cbd5e1;line-height:1.5;}
+    .fi-loc{font-size:11px;color:#60a5fa;margin-top:2px;}
+    .fi-user{color:#c084fc;}
+
+    select,input,textarea{width:100%;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(10,16,34,.95);color:#e2e8f0;font-size:13px;font-family:inherit;}
+    select:focus,input:focus,textarea:focus{outline:none;border-color:rgba(96,165,250,.5);}
+    textarea{resize:vertical;min-height:66px;}
+    .rpt-row{display:flex;gap:8px;margin-bottom:8px;}
+    .rpt-row select{flex:1;}
+    .sub-btn{width:100%;padding:10px;border-radius:12px;border:none;background:rgba(248,113,113,.85);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;margin-top:2px;}
+    .sub-btn:hover{background:#f87171;}
+    .ok-msg{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.28);border-radius:10px;padding:9px 12px;font-size:12px;color:#6ee7b7;font-weight:700;display:none;margin-top:6px;}
+
+    .cond-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;}
+    .cond-row:last-child{border-bottom:none;}
+    .ck{color:#475569;}.cv{font-weight:700;}
+
+    .sh-item{background:rgba(255,255,255,.04);border:1px solid rgba(96,165,250,.1);border-radius:10px;padding:9px 11px;margin-bottom:7px;cursor:pointer;}
+    .sh-item:hover{border-color:rgba(96,165,250,.35);}
+    .sh-name{font-size:13px;font-weight:700;}
+    .sh-meta{font-size:11px;color:#475569;margin-top:2px;}
+    .stag{display:inline-block;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;margin-top:4px;}
+    .s-open{background:rgba(52,211,153,.18);color:#34d399;}
+    .s-lim{background:rgba(251,191,36,.18);color:#fbbf24;}
+
+    .grid-2{display:grid;grid-template-columns:minmax(0,1.2fr) 310px;gap:14px;}
+    @media(max-width:860px){.grid-2{grid-template-columns:1fr;}}
+
+    .selected-addr{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);border-radius:10px;padding:8px 12px;font-size:12px;color:#6ee7b7;margin-bottom:8px;display:none;}
+    .selected-addr span{font-weight:700;}
+
+    .leaflet-control-geosearch form{background:#0d1f3c !important;border:1px solid rgba(96,165,250,.3) !important;border-radius:10px !important;}
+    .leaflet-control-geosearch form input{background:#0d1f3c !important;color:#e2e8f0 !important;border:none !important;font-family:'Segoe UI',sans-serif !important;font-size:13px !important;}
+    .leaflet-control-geosearch form input::placeholder{color:#475569 !important;}
+    .leaflet-control-geosearch .results{background:#0d1f3c !important;border:1px solid rgba(96,165,250,.3) !important;border-radius:0 0 10px 10px !important;}
+    .leaflet-control-geosearch .results > *{border-bottom:1px solid rgba(96,165,250,.1) !important;color:#e2e8f0 !important;font-size:12px !important;padding:9px 12px !important;}
+    .leaflet-control-geosearch .results > *:hover,.leaflet-control-geosearch .results > *.active{background:rgba(96,165,250,.14) !important;color:#93c5fd !important;}
+    .leaflet-control-geosearch a.reset{color:#94a3b8 !important;}
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-brand">CrisisCloud</div>
+  <a href="/">Live Dashboard</a>
+  <span class="topnav-sub">/</span>
+  <a href="/simulation" class="active">Hurricane Irene Simulation</a>
+  <div class="sim-badge"><div class="sdot"></div>SIM RUNNING</div>
+</nav>
+
+<div class="hdr">
+  <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+    <div class="logo">CrisisCloud</div>
+    <div class="live-pill"><div class="sdot"></div>LIVE</div>
+    <div style="font-size:11px;color:#94a3b8;">Hampton Roads Emergency Operations</div>
+  </div>
+  <div>
+    <div class="clock-date" id="liveDate"></div>
+    <div class="clock-time" id="liveTime"></div>
+  </div>
+</div>
+
+<div class="alert-strip">
+  <div class="sdot"></div>
+  <span style="color:#fca5a5;font-weight:700;">ACTIVE - HURRICANE WARNING - STORM SURGE WARNING - FLASH FLOOD WATCH</span>
+  <span style="color:#fbbf24;margin-left:6px;">Hurricane Irene is bringing 75 mph winds and major surge into Hampton Roads right now</span>
+</div>
+
+<div class="steps-bar">
+  <button class="step-btn active" onclick="goStep(0)" id="sb0">1 - Welcome</button>
+  <button class="step-btn" onclick="goStep(1)" id="sb1">2 - Live map</button>
+  <button class="step-btn" onclick="goStep(2)" id="sb2">3 - Storm data</button>
+  <button class="step-btn" onclick="goStep(3)" id="sb3">4 - Shelters</button>
+  <button class="step-btn" onclick="goStep(4)" id="sb4">5 - Submit report</button>
+  <button class="step-btn" onclick="goStep(5)" id="sb5">6 - Live feed</button>
+  <button class="step-btn" onclick="goStep(6)" id="sb6">7 - Full sim</button>
+</div>
+
+<!-- Step 0 -->
+<div class="step-panel visible" id="sp0">
+  <div class="step-card">
+    <div class="step-number">Step 1 of 7</div>
+    <div class="step-title">Welcome to the Hurricane Irene simulation</div>
+    <div class="step-desc">
+      This is a walkthrough of CrisisCloud built around <strong>Hurricane Irene, which hit Hampton Roads on August 27, 2011</strong>. Everything you see here is based on what actually happened that day. The clock at the top is running on your real current time so it always feels like the storm is happening right now, no matter when you open this page.<br><br>
+      Work through each step using the buttons above or the arrows at the bottom of each card. You can jump to any step at any time. When you are ready to go back to the real operational dashboard, just click <strong>Live Dashboard</strong> in the nav above.
+    </div>
+    <div class="callout-red">
+      Irene brought 4 to 8 feet of storm surge into Hampton Roads, sustained winds between 70 and 80 mph, widespread power outages across Norfolk, Chesapeake, Portsmouth and Virginia Beach, and up to 12 inches of rain across eastern Virginia. It was one of the most disruptive storms the region had seen since Floyd in 1999.
+    </div>
+    <div class="callout">
+      This simulation does not replace the live dashboard. It runs alongside it so your team can learn the tools before they need them in a real emergency.
+    </div>
+    <div class="step-nav">
+      <button class="btn-nav" disabled>Previous</button>
+      <span class="progress-text">1 of 7</span>
+      <button class="btn-nav primary" onclick="goStep(1)">Next, reading the map</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 1 -->
+<div class="step-panel" id="sp1">
+  <div class="step-card" style="max-width:100%;">
+    <div class="step-number">Step 2 of 7</div>
+    <div class="step-title">The live emergency map</div>
+    <div class="step-desc">
+      This is a real interactive map centered on Hampton Roads. You can <strong>drag it around, pinch or scroll to zoom in and out, and tap any marker to see what is going on at that location</strong>. Use the city filter to narrow down what you see, or tap Use my location to center the map on where you are right now.
+    </div>
+    <div class="callout">
+      The S markers are open shelters. The F markers show active flooding zones reported during Irene. The red triangles are incidents like downed trees and road closures. Tap any of them for more details.
+    </div>
+    <div class="map-toolbar">
+      <select onchange="filterCity('s1Map',this.value)">
+        <option value="All">All cities</option>
+        <option value="Norfolk">Norfolk</option>
+        <option value="Virginia Beach">Virginia Beach</option>
+        <option value="Chesapeake">Chesapeake</option>
+        <option value="Portsmouth">Portsmouth</option>
+      </select>
+      <button class="loc-btn" onclick="locateOnMap('s1Map')">Use my location</button>
+    </div>
+    <div id="s1Map" class="leaflet-map" style="height:420px;"></div>
+    <div class="step-nav" style="margin-top:14px;">
+      <button class="btn-nav" onclick="goStep(0)">Previous</button>
+      <span class="progress-text">2 of 7</span>
+      <button class="btn-nav primary" onclick="goStep(2)">Next, storm data</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 2 -->
+<div class="step-panel" id="sp2">
+  <div class="step-card">
+    <div class="step-number">Step 3 of 7</div>
+    <div class="step-title">Reading the storm conditions</div>
+    <div class="step-desc">
+      The storm data panel shows what conditions looked like during Irene based on NWS Wakefield records. The clock at the top of every page is pulling your real current time in EST, so it always looks like the storm is happening at this very moment.
+    </div>
+    <div style="background:rgba(16,28,52,0.92);border:1px solid rgba(96,165,250,.15);border-radius:14px;padding:14px;margin:12px 0;">
+      <div class="sect-label">Current storm conditions</div>
+      <div class="cond-row"><span class="ck">Local time (EST)</span><span class="cv amber" id="tutTime">loading...</span></div>
+      <div class="cond-row"><span class="ck">Storm name</span><span class="cv red">Hurricane Irene, Category 1</span></div>
+      <div class="cond-row"><span class="ck">Storm center</span><span class="cv red">Near Cape Lookout, NC</span></div>
+      <div class="cond-row"><span class="ck">Sustained winds</span><span class="cv red">75 to 80 mph</span></div>
+      <div class="cond-row"><span class="ck">Storm surge</span><span class="cv red">4 to 8 feet above normal tide</span></div>
+      <div class="cond-row"><span class="ck">Rainfall recorded so far</span><span class="cv blue">6.2 inches</span></div>
+      <div class="cond-row"><span class="ck">Barometric pressure</span><span class="cv amber">975 mb and still falling</span></div>
+      <div class="cond-row"><span class="ck">Visibility</span><span class="cv amber">Under 1 mile in most areas</span></div>
+    </div>
+    <div class="callout-green">
+      In the real dashboard, these numbers come directly from the NWS weather API using wherever the map is currently centered. As you move the map around, the weather data updates to match that location.
+    </div>
+    <div class="step-nav">
+      <button class="btn-nav" onclick="goStep(1)">Previous</button>
+      <span class="progress-text">3 of 7</span>
+      <button class="btn-nav primary" onclick="goStep(3)">Next, finding shelters</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 3 -->
+<div class="step-panel" id="sp3">
+  <div class="step-card">
+    <div class="step-number">Step 4 of 7</div>
+    <div class="step-title">Finding open shelters</div>
+    <div class="step-desc">
+      During Irene, four shelters opened across the region to take in residents who had to leave their homes. Tap any card below and the map will fly straight to that location and show you the details. Green means the shelter is open, yellow means space is getting tight.
+    </div>
+    <div id="s3Map" class="leaflet-map" style="height:260px;margin-bottom:12px;"></div>
+    <div class="sh-item" onclick="flyMap('s3Map',36.9182,-76.2496,'Norfolk Rec Center is open with 450 beds available')">
+      <div class="sh-name">Norfolk Recreation Center</div>
+      <div class="sh-meta">Norview Ave, Norfolk - (757) 441-2400 - 450 beds available</div>
+      <span class="stag s-open">Open</span>
+    </div>
+    <div class="sh-item" onclick="flyMap('s3Map',36.9012,-76.2198,'Lake Taylor High School is open with 280 beds available')">
+      <div class="sh-name">Lake Taylor High School</div>
+      <div class="sh-meta">Kleen St, Norfolk - (757) 441-2000 - 280 beds available</div>
+      <span class="stag s-open">Open</span>
+    </div>
+    <div class="sh-item" onclick="flyMap('s3Map',36.8529,-75.9774,'VB Convention Center is getting full, only 120 beds left')">
+      <div class="sh-name">Virginia Beach Convention Center</div>
+      <div class="sh-meta">19th St, Virginia Beach - (757) 385-2000 - 120 beds remaining</div>
+      <span class="stag s-lim">Limited</span>
+    </div>
+    <div class="sh-item" onclick="flyMap('s3Map',36.6760,-76.3082,'Oscar Smith High School is open with 350 beds available')">
+      <div class="sh-name">Oscar Smith High School</div>
+      <div class="sh-meta">Chesapeake - (757) 547-9300 - 350 beds available</div>
+      <span class="stag s-open">Open</span>
+    </div>
+    <div class="callout">
+      In the real dashboard, shelter staff can log in and update bed counts and status as the storm goes on. Any changes they make show up on every connected screen within about 5 seconds.
+    </div>
+    <div class="step-nav">
+      <button class="btn-nav" onclick="goStep(2)">Previous</button>
+      <span class="progress-text">4 of 7</span>
+      <button class="btn-nav primary" onclick="goStep(4)">Next, submit a report</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 4 -->
+<div class="step-panel" id="sp4">
+  <div class="step-card">
+    <div class="step-number">Step 5 of 7</div>
+    <div class="step-title">Submitting a field report</div>
+    <div class="step-desc">
+      Use the search bar built into the map to find the address where you are reporting from. Start typing something like <strong>Shore Drive Norfolk</strong> or <strong>700 Park</strong> and a list of matching addresses will appear. Pick the right one and a pin will drop on the map at that exact spot. You can also tap <strong>Use my location</strong> to skip the search and use your GPS instead.
+    </div>
+    <div class="callout">
+      The address search is focused on Hampton Roads so local streets come up first. Once you pick an address or use your location, fill in the form below and hit submit.
+    </div>
+    <div id="s4Map" class="leaflet-map" style="height:320px;margin-bottom:12px;"></div>
+    <div class="selected-addr" id="s4SelectedAddr">Location set to <span id="s4AddrText"></span></div>
+    <button class="loc-btn" style="width:100%;margin-bottom:10px;" onclick="useGPS('s4Map','s4SelectedAddr','s4AddrText',function(lt,ln){s4Lat=lt;s4Lng=ln;})">Use my location</button>
+    <div class="rpt-row">
+      <select id="rptType">
+        <option value="">What kind of incident is this?</option>
+        <option value="flood">Flooding</option>
+        <option value="surge">Storm surge</option>
+        <option value="wind">Wind damage</option>
+        <option value="power">Power outage</option>
+        <option value="road">Road closed</option>
+        <option value="other">Something else</option>
+      </select>
+      <select id="rptCity">
+        <option value="">Which city?</option>
+        <option value="Norfolk">Norfolk</option>
+        <option value="Virginia Beach">Virginia Beach</option>
+        <option value="Chesapeake">Chesapeake</option>
+        <option value="Portsmouth">Portsmouth</option>
+        <option value="Suffolk">Suffolk</option>
+      </select>
+    </div>
+    <textarea id="rptDesc" placeholder="Tell us what you are seeing. How deep is the water? Is the road passable? Are people stranded? The more detail the better." style="margin-bottom:8px;"></textarea>
+    <input type="text" id="rptName" placeholder="Your name (optional)" style="margin-bottom:8px;"/>
+    <button class="sub-btn" onclick="submitStepReport()">Submit this report</button>
+    <div class="ok-msg" id="rptOk">Got it. Your report is pinned to the map and added to the live feed.</div>
+    <div class="step-nav" style="margin-top:14px;">
+      <button class="btn-nav" onclick="goStep(3)">Previous</button>
+      <span class="progress-text">5 of 7</span>
+      <button class="btn-nav primary" onclick="goStep(5)">Next, the live feed</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 5 -->
+<div class="step-panel" id="sp5">
+  <div class="step-card">
+    <div class="step-number">Step 6 of 7</div>
+    <div class="step-title">The live reports feed</div>
+    <div class="step-desc">
+      Every report that comes in shows up here in real time, newest at the top. Each one has a timestamp, an incident type, a short description, and the location it was reported from. If you submitted something in the last step, it should be sitting right at the top of this list.
+    </div>
+    <div class="feed" id="tutFeed" style="max-height:300px;margin:12px 0;">
+      <div class="fi"><div class="fi-top"><span class="ft ft-surge">Storm surge</span><span class="fi-time" id="tft0"></span></div><div class="fi-msg">Water is coming over the seawall at Willoughby Spit. Shore Drive has at least 3 feet of standing water on it right now.</div><div class="fi-loc">Norfolk, Willoughby Spit</div></div>
+      <div class="fi"><div class="fi-top"><span class="ft ft-wind">Wind damage</span><span class="fi-time" id="tft1"></span></div><div class="fi-msg">A large oak came down across Hampton Blvd near Gate 5. The road is completely blocked and there is no way around it.</div><div class="fi-loc">Norfolk, Hampton Blvd</div></div>
+      <div class="fi"><div class="fi-top"><span class="ft ft-flood">Flooding</span><span class="fi-time" id="tft2"></span></div><div class="fi-msg">Battlefield Blvd southbound is underwater between Greenbrier Pkwy and Cedar Rd. It looks to be about 2 feet deep in the lowest spots.</div><div class="fi-loc">Chesapeake, Battlefield Blvd</div></div>
+      <div class="fi"><div class="fi-top"><span class="ft ft-power">Power outage</span><span class="fi-time" id="tft3"></span></div><div class="fi-msg">The whole Ghent neighborhood went dark around 9:50. A transformer blew on Colonial Ave. Dominion has been called.</div><div class="fi-loc">Norfolk, Ghent</div></div>
+      <div class="fi"><div class="fi-top"><span class="ft ft-road">Road closed</span><span class="fi-time" id="tft4"></span></div><div class="fi-msg">Indian River Rd is closed at the bridge. Debris in the road and some flooding. Police are on scene redirecting traffic.</div><div class="fi-loc">Chesapeake, Indian River Rd</div></div>
+    </div>
+    <div class="callout-green">
+      In the real dashboard the feed refreshes automatically every 5 seconds. Any report submitted from a phone, tablet, or computer on the network will appear here without anyone needing to do anything.
+    </div>
+    <div class="step-nav">
+      <button class="btn-nav" onclick="goStep(4)">Previous</button>
+      <span class="progress-text">6 of 7</span>
+      <button class="btn-nav primary" onclick="goStep(6)">Next, full simulation</button>
+    </div>
+  </div>
+</div>
+
+<!-- Step 6 -->
+<div class="step-panel" id="sp6">
+  <div class="step-card" style="max-width:100%;">
+    <div class="step-number">Step 7 of 7</div>
+    <div class="step-title">Everything running together</div>
+    <div class="step-desc" style="margin-bottom:12px;">
+      This is the full simulation with everything active at once. The clock is real, the map is interactive, the address search works, and any report you submit here will pin to the map and show up in the feed instantly. This is exactly what the real dashboard looks like during an active storm.
+    </div>
+    <div class="callout-green" style="margin-bottom:14px;">
+      You have finished the walkthrough. Feel free to keep exploring, submit more test reports, or head back to the live dashboard using the nav at the top of the page.
+    </div>
+    <div class="grid-2">
+      <div>
+        <div class="card">
+          <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px;">
+            <div style="font-size:14px;font-weight:800;">Live emergency map</div>
+            <div style="display:flex;gap:8px;flex-wrap:wrap;">
+              <select style="width:auto;font-size:12px;padding:5px 9px;" onchange="filterCity('s6Map',this.value)">
+                <option value="All">All cities</option>
+                <option value="Norfolk">Norfolk</option>
+                <option value="Virginia Beach">Virginia Beach</option>
+                <option value="Chesapeake">Chesapeake</option>
+                <option value="Portsmouth">Portsmouth</option>
+              </select>
+              <button class="loc-btn" onclick="locateOnMap('s6Map')">Use my location</button>
+            </div>
+          </div>
+          <div class="stat-row">
+            <div class="stat"><div class="stat-l">Shelters open</div><div class="stat-v green">4</div></div>
+            <div class="stat"><div class="stat-l">Reports filed</div><div class="stat-v blue" id="s6RptCount">14</div></div>
+            <div class="stat"><div class="stat-l">Roads closed</div><div class="stat-v amber">12+</div></div>
+            <div class="stat"><div class="stat-l">Max wind</div><div class="stat-v red">75 mph</div></div>
+          </div>
+          <div id="s6Map" class="leaflet-map" style="height:360px;margin-bottom:10px;"></div>
+          <div class="sect-label">Reports coming in</div>
+          <div class="feed" id="s6Feed">
+            <div class="fi"><div class="fi-top"><span class="ft ft-surge">Storm surge</span><span class="fi-time" id="sft0"></span></div><div class="fi-msg">Water coming over the seawall at Willoughby Spit. Shore Drive has about 3 feet of flooding on it.</div><div class="fi-loc">Norfolk, Willoughby Spit</div></div>
+            <div class="fi"><div class="fi-top"><span class="ft ft-wind">Wind damage</span><span class="fi-time" id="sft1"></span></div><div class="fi-msg">Oak tree fell across Hampton Blvd near Gate 5. Road is completely blocked.</div><div class="fi-loc">Norfolk, Hampton Blvd</div></div>
+            <div class="fi"><div class="fi-top"><span class="ft ft-flood">Flooding</span><span class="fi-time" id="sft2"></span></div><div class="fi-msg">Battlefield Blvd is underwater between Greenbrier and Cedar Rd, about 2 feet deep.</div><div class="fi-loc">Chesapeake, Battlefield Blvd</div></div>
+            <div class="fi"><div class="fi-top"><span class="ft ft-power">Power outage</span><span class="fi-time" id="sft3"></span></div><div class="fi-msg">Ghent is completely dark. Transformer blew on Colonial Ave around 9:50.</div><div class="fi-loc">Norfolk, Ghent</div></div>
+            <div class="fi"><div class="fi-top"><span class="ft ft-road">Road closed</span><span class="fi-time" id="sft4"></span></div><div class="fi-msg">Indian River Rd is closed at the bridge. Debris and flooding, police on scene.</div><div class="fi-loc">Chesapeake, Indian River Rd</div></div>
+          </div>
+        </div>
+      </div>
+      <div>
+        <div class="card">
+          <div class="sect-label">Storm conditions right now</div>
+          <div class="cond-row"><span class="ck">Time (EST)</span><span class="cv amber" id="s6Time"></span></div>
+          <div class="cond-row"><span class="ck">Storm</span><span class="cv red">Hurricane Irene, Category 1</span></div>
+          <div class="cond-row"><span class="ck">Winds</span><span class="cv red">75 to 80 mph</span></div>
+          <div class="cond-row"><span class="ck">Surge</span><span class="cv red">4 to 8 feet above tide</span></div>
+          <div class="cond-row"><span class="ck">Rain so far</span><span class="cv blue">6.2 inches</span></div>
+          <div class="cond-row"><span class="ck">Pressure</span><span class="cv amber">975 mb and falling</span></div>
+        </div>
+        <div class="card">
+          <div class="sect-label">Open shelters, tap to zoom in</div>
+          <div class="sh-item" onclick="flyMap('s6Map',36.9182,-76.2496,'Norfolk Rec Center, 450 beds still available')"><div class="sh-name">Norfolk Rec Center</div><div class="sh-meta">(757) 441-2400, 450 beds</div><span class="stag s-open">Open</span></div>
+          <div class="sh-item" onclick="flyMap('s6Map',36.9012,-76.2198,'Lake Taylor High School, 280 beds still available')"><div class="sh-name">Lake Taylor High School</div><div class="sh-meta">(757) 441-2000, 280 beds</div><span class="stag s-open">Open</span></div>
+          <div class="sh-item" onclick="flyMap('s6Map',36.8529,-75.9774,'VB Convention Center is getting full, 120 beds left')"><div class="sh-name">VB Convention Center</div><div class="sh-meta">(757) 385-2000, 120 beds left</div><span class="stag s-lim">Limited</span></div>
+          <div class="sh-item" onclick="flyMap('s6Map',36.6760,-76.3082,'Oscar Smith High School, 350 beds still available')"><div class="sh-name">Oscar Smith High School</div><div class="sh-meta">(757) 547-9300, 350 beds</div><span class="stag s-open">Open</span></div>
+        </div>
+        <div class="card">
+          <div class="sect-label">Submit a report</div>
+          <div class="selected-addr" id="s6SelectedAddr">Location set to <span id="s6AddrText"></span></div>
+          <button class="loc-btn" style="width:100%;margin-bottom:8px;" onclick="useGPS('s6Map','s6SelectedAddr','s6AddrText',function(lt,ln){s6Lat=lt;s6Lng=ln;})">Use my location</button>
+          <div class="rpt-row">
+            <select id="s6RptType">
+              <option value="">What kind of incident?</option>
+              <option value="flood">Flooding</option>
+              <option value="surge">Storm surge</option>
+              <option value="wind">Wind damage</option>
+              <option value="power">Power outage</option>
+              <option value="road">Road closed</option>
+              <option value="other">Something else</option>
+            </select>
+            <select id="s6RptCity">
+              <option value="">Which city?</option>
+              <option value="Norfolk">Norfolk</option>
+              <option value="Virginia Beach">Virginia Beach</option>
+              <option value="Chesapeake">Chesapeake</option>
+              <option value="Portsmouth">Portsmouth</option>
+              <option value="Suffolk">Suffolk</option>
+            </select>
+          </div>
+          <textarea id="s6Desc" placeholder="Describe what you are seeing. Water depth, road conditions, any injuries?" style="margin-bottom:8px;"></textarea>
+          <button class="sub-btn" onclick="submitS6Report()">Submit this report</button>
+          <div class="ok-msg" id="s6Ok">Got it. Pinned to the map and added to the feed.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-geosearch@3.11.1/dist/geosearch.umd.js"></script>
+<script>
+var DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function getEST(){var n=new Date();return new Date(n.getTime()+n.getTimezoneOffset()*60000-18000000);}
+function pad(n){return n<10?'0'+n:String(n);}
+function fmtFull(d){var h=d.getHours(),m=d.getMinutes(),s=d.getSeconds(),ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+pad(m)+':'+pad(s)+' '+ap+' EST';}
+function fmtShort(d){var h=d.getHours(),m=d.getMinutes(),ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+pad(m)+' '+ap;}
+function fmtDate(d){return DAYS[d.getDay()]+', '+MONTHS[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();}
+
+function tick(){
+  var e=getEST();
+  document.getElementById('liveDate').textContent=fmtDate(e);
+  document.getElementById('liveTime').textContent=fmtFull(e);
+  var tt=document.getElementById('tutTime');if(tt)tt.textContent=fmtFull(e);
+  var st=document.getElementById('s6Time');if(st)st.textContent=fmtShort(e)+' EST';
+}
+function seedTimes(){
+  var n=getEST(),o=[7,21,33,45,58];
+  ['tft','sft'].forEach(function(p){
+    o.forEach(function(v,i){
+      var el=document.getElementById(p+i);
+      if(el){var t=new Date(n.getTime()-v*60000);el.textContent=fmtShort(t)+' EST';}
+    });
+  });
+}
+tick();seedTimes();setInterval(tick,1000);
+
+var mapReg={};
+var markerReg={};
+var pinLayers={};
+var currentStep=0;
+var completed=[];
+var tutReport=null;
+var s4Lat=null,s4Lng=null;
+var s6Lat=null,s6Lng=null;
+
+var tLabels={flood:'Flooding',surge:'Storm surge',wind:'Wind damage',power:'Power outage',road:'Road closed',other:'Report'};
+var tCls={flood:'ft-flood',surge:'ft-surge',wind:'ft-wind',power:'ft-power',road:'ft-road',other:'ft-flood'};
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+var shelters=[
+  {lat:36.9182,lng:-76.2496,name:'Norfolk Rec Center',city:'Norfolk',beds:450,status:'open'},
+  {lat:36.9012,lng:-76.2198,name:'Lake Taylor High School',city:'Norfolk',beds:280,status:'open'},
+  {lat:36.8529,lng:-75.9774,name:'VB Convention Center',city:'Virginia Beach',beds:120,status:'limited'},
+  {lat:36.6760,lng:-76.3082,name:'Oscar Smith High School',city:'Chesapeake',beds:350,status:'open'}
+];
+var floods=[
+  {lat:36.9299,lng:-76.2922,label:'Willoughby Spit surge',city:'Norfolk'},
+  {lat:36.8997,lng:-76.3012,label:'Coastal flooding',city:'Norfolk'},
+  {lat:36.7282,lng:-76.0473,label:'Coastal surge',city:'Virginia Beach'},
+  {lat:36.7782,lng:-76.2973,label:'Tidal flooding',city:'Portsmouth'}
+];
+var incidents=[
+  {lat:36.9087,lng:-76.2682,label:'Tree down on Hampton Blvd',city:'Norfolk'},
+  {lat:36.7012,lng:-76.2482,label:'Road flooded on Battlefield Blvd',city:'Chesapeake'},
+  {lat:36.8312,lng:-76.3182,label:'Downed power lines',city:'Portsmouth'}
+];
+
+function mkS(status){
+  var c=status==='open'?'#34d399':'#fbbf24';
+  return L.divIcon({className:'',iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-16],
+    html:'<div style="width:28px;height:28px;border-radius:50%;background:#1d4ed8;border:2.5px solid '+c+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white;line-height:1;">S</div>'});
+}
+function mkF(){
+  return L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,13],popupAnchor:[0,-15],
+    html:'<div style="width:26px;height:26px;border-radius:50%;background:#1e3a8a;border:2px solid #60a5fa;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:white;line-height:1;">F</div>'});
+}
+function mkI(){
+  return L.divIcon({className:'',iconSize:[26,24],iconAnchor:[13,12],popupAnchor:[0,-14],
+    html:'<div style="width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;border-bottom:24px solid #dc2626;"></div>'});
+}
+function mkU(){
+  return L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,13],popupAnchor:[0,-15],
+    html:'<div style="width:26px;height:26px;border-radius:50%;background:rgba(192,132,252,0.82);border:2px solid #c084fc;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white;line-height:1;">!</div>'});
+}
+
+var HR_BOUNDS={left:-77.0,right:-75.7,bottom:36.4,top:37.2};
+
+function buildMap(divId,lat,lng,zoom,addBase,addSearch,onResult){
+  if(mapReg[divId])return mapReg[divId];
+  var m=L.map(divId,{zoomControl:true}).setView([lat,lng],zoom);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{attribution:'&copy; CartoDB',maxZoom:19}).addTo(m);
+  markerReg[divId]=[];
+  pinLayers[divId]=L.layerGroup().addTo(m);
+  if(addBase){
+    shelters.forEach(function(s){
+      var mk=L.marker([s.lat,s.lng],{icon:mkS(s.status)})
+        .bindPopup('<b>'+s.name+'</b><br>Status: '+s.status+'<br>Beds available: '+s.beds)
+        .addTo(m);
+      markerReg[divId].push({mk:mk,city:s.city});
+    });
+    floods.forEach(function(f){
+      var mk=L.marker([f.lat,f.lng],{icon:mkF()})
+        .bindPopup('<b>Flooding</b><br>'+f.label)
+        .addTo(m);
+      markerReg[divId].push({mk:mk,city:f.city});
+    });
+    incidents.forEach(function(i){
+      var mk=L.marker([i.lat,i.lng],{icon:mkI()})
+        .bindPopup('<b>Incident</b><br>'+i.label)
+        .addTo(m);
+      markerReg[divId].push({mk:mk,city:i.city});
+    });
+  }
+  if(addSearch){
+    var provider=new GeoSearch.OpenStreetMapProvider({
+      params:{
+        countrycodes:'us',
+        viewbox:[HR_BOUNDS.left,HR_BOUNDS.bottom,HR_BOUNDS.right,HR_BOUNDS.top].join(','),
+        bounded:1,
+        addressdetails:1,
+        limit:8
+      }
+    });
+    var sc=new GeoSearch.GeoSearchControl({
+      provider:provider,
+      style:'bar',
+      showMarker:true,
+      showPopup:true,
+      autoClose:true,
+      retainZoomLevel:false,
+      animateZoom:true,
+      keepResult:true,
+      searchLabel:'Search an address in Hampton Roads...',
+      notFoundMessage:'No results found, try a more specific address',
+      marker:{icon:mkU(),draggable:false}
+    });
+    m.addControl(sc);
+    if(onResult){
+      m.on('geosearch/showlocation',function(e){
+        onResult(e.location.y,e.location.x,e.location.label);
+      });
+    }
+  }
+  mapReg[divId]=m;
+  return m;
+}
+
+window.addEventListener('load',function(){
+  buildMap('s1Map',36.85,-76.28,10,true,true,null);
+
+  buildMap('s3Map',36.82,-76.18,10,false,false,null);
+  shelters.forEach(function(s){
+    L.marker([s.lat,s.lng],{icon:mkS(s.status)})
+      .bindPopup('<b>'+s.name+'</b><br>'+s.beds+' beds, '+s.status)
+      .addTo(mapReg['s3Map']);
+  });
+
+  buildMap('s4Map',36.85,-76.28,11,false,true,function(lat,lng,label){
+    s4Lat=lat;s4Lng=lng;
+    var short=label.split(',').slice(0,2).join(',');
+    document.getElementById('s4AddrText').textContent=short;
+    document.getElementById('s4SelectedAddr').style.display='block';
+    pinLayers['s4Map'].clearLayers();
+    L.marker([lat,lng],{icon:mkU()})
+      .bindPopup('<b>Report location</b><br>'+short)
+      .openPopup()
+      .addTo(pinLayers['s4Map']);
+    mapReg['s4Map'].flyTo([lat,lng],16,{duration:1.2});
+  });
+
+  buildMap('s6Map',36.85,-76.28,10,true,true,function(lat,lng,label){
+    s6Lat=lat;s6Lng=lng;
+    var short=label.split(',').slice(0,2).join(',');
+    document.getElementById('s6AddrText').textContent=short;
+    document.getElementById('s6SelectedAddr').style.display='block';
+    pinLayers['s6Map'].clearLayers();
+    var pin=L.marker([lat,lng],{icon:mkU()})
+      .bindPopup('<b>Report location</b><br>'+short)
+      .addTo(pinLayers['s6Map']);
+    pin.openPopup();
+    mapReg['s6Map'].flyTo([lat,lng],16,{duration:1.2});
+  });
+});
+
+function goStep(n){
+  document.querySelectorAll('.step-panel').forEach(function(p){p.classList.remove('visible');});
+  document.getElementById('sp'+n).classList.add('visible');
+  document.querySelectorAll('.step-btn').forEach(function(b,i){
+    b.classList.remove('active');
+    if(completed.indexOf(i)>-1)b.classList.add('done');
+    else b.classList.remove('done');
+  });
+  if(completed.indexOf(currentStep)===-1)completed.push(currentStep);
+  document.getElementById('sb'+currentStep).classList.add('done');
+  currentStep=n;
+  document.getElementById('sb'+n).classList.remove('done');
+  document.getElementById('sb'+n).classList.add('active');
+  setTimeout(function(){
+    Object.keys(mapReg).forEach(function(id){mapReg[id].invalidateSize();});
+  },150);
+  if(n===5&&tutReport){
+    var f=document.getElementById('tutFeed');
+    if(!f.querySelector('.fi-user'))f.insertBefore(tutReport.cloneNode(true),f.firstChild);
+  }
+  if(n===6&&tutReport){
+    var f2=document.getElementById('s6Feed');
+    if(!f2.querySelector('.fi-user'))f2.insertBefore(tutReport.cloneNode(true),f2.firstChild);
+  }
+  window.scrollTo(0,0);
+}
+
+function filterCity(divId,val){
+  var m=mapReg[divId];if(!m)return;
+  (markerReg[divId]||[]).forEach(function(item){
+    if(val==='All'||item.city===val){if(!m.hasLayer(item.mk))m.addLayer(item.mk);}
+    else{m.removeLayer(item.mk);}
+  });
+}
+
+function flyMap(divId,lat,lng,label){
+  var m=mapReg[divId];if(!m)return;
+  m.flyTo([lat,lng],14,{duration:1.2});
+  setTimeout(function(){
+    L.popup().setLatLng([lat,lng]).setContent('<b>'+label+'</b>').openOn(m);
+  },1300);
+}
+
+function locateOnMap(divId){
+  var m=mapReg[divId];if(!m){alert('Map is not ready yet.');return;}
+  if(!navigator.geolocation){alert('Your browser does not support geolocation.');return;}
+  navigator.geolocation.getCurrentPosition(function(pos){
+    m.flyTo([pos.coords.latitude,pos.coords.longitude],14,{duration:1.2});
+    L.marker([pos.coords.latitude,pos.coords.longitude])
+      .bindPopup('You are here').openPopup().addTo(m);
+  },function(){
+    alert('Could not get your location. Make sure location access is allowed in your browser settings.');
+  });
+}
+
+function useGPS(divId,addrBoxId,addrTextId,cb){
+  if(!navigator.geolocation){alert('Your browser does not support geolocation.');return;}
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var lt=pos.coords.latitude,ln=pos.coords.longitude;
+    cb(lt,ln);
+    var m=mapReg[divId];
+    if(m){
+      m.flyTo([lt,ln],15,{duration:1});
+      pinLayers[divId].clearLayers();
+      L.marker([lt,ln],{icon:mkU()})
+        .bindPopup('Your current location').openPopup()
+        .addTo(pinLayers[divId]);
+    }
+    fetch('https://nominatim.openstreetmap.org/reverse?format=json&lat='+lt+'&lon='+ln)
+      .then(function(r){return r.json();})
+      .then(function(d){
+        if(d&&d.display_name){
+          var short=d.display_name.split(',').slice(0,2).join(',');
+          document.getElementById(addrTextId).textContent=short;
+          document.getElementById(addrBoxId).style.display='block';
+        }
+      }).catch(function(){});
+  },function(){
+    alert('Could not get your location. Make sure location access is allowed in your browser settings.');
+  });
+}
+
+function submitStepReport(){
+  var type=document.getElementById('rptType').value;
+  var city=document.getElementById('rptCity').value;
+  var addr=document.getElementById('s4AddrText').textContent;
+  var desc=document.getElementById('rptDesc').value.trim();
+  if(!type||!city||!desc){
+    alert('Please pick an incident type, a city, and describe what you are seeing before submitting.');
+    return;
+  }
+  var now=getEST();
+  var item=document.createElement('div');
+  item.className='fi';
+  item.style.borderColor='rgba(192,132,252,0.4)';
+  item.innerHTML='<div class="fi-top"><span class="ft '+tCls[type]+'">'+tLabels[type]+'</span><span class="fi-time">'+fmtShort(now)+' EST</span></div>'
+    +'<div class="fi-msg">'+esc(desc)+'</div>'
+    +'<div class="fi-loc fi-user">'+(city+(addr?', '+addr:''))+' - your report</div>';
+  tutReport=item;
+  document.getElementById('rptOk').style.display='block';
+  setTimeout(function(){document.getElementById('rptOk').style.display='none';},4000);
+  document.getElementById('rptType').value='';
+  document.getElementById('rptCity').value='';
+  document.getElementById('rptDesc').value='';
+  document.getElementById('rptName').value='';
+  document.getElementById('s4SelectedAddr').style.display='none';
+  document.getElementById('s4AddrText').textContent='';
+  s4Lat=null;s4Lng=null;
+}
+
+function submitS6Report(){
+  var type=document.getElementById('s6RptType').value;
+  var city=document.getElementById('s6RptCity').value;
+  var addr=document.getElementById('s6AddrText').textContent;
+  var desc=document.getElementById('s6Desc').value.trim();
+  if(!type||!city||!desc){
+    alert('Please pick an incident type, a city, and describe what you are seeing before submitting.');
+    return;
+  }
+  if(!s6Lat||!s6Lng){
+    alert('Please search for an address in the map above or tap Use my location before submitting.');
+    return;
+  }
+  var now=getEST();
+  var item=document.createElement('div');
+  item.className='fi';
+  item.style.borderColor='rgba(192,132,252,0.4)';
+  item.innerHTML='<div class="fi-top"><span class="ft '+tCls[type]+'">'+tLabels[type]+'</span><span class="fi-time">'+fmtShort(now)+' EST</span></div>'
+    +'<div class="fi-msg">'+esc(desc)+'</div>'
+    +'<div class="fi-loc fi-user">'+(city+(addr?', '+addr:''))+' - your report</div>';
+  var ff=document.getElementById('s6Feed');
+  ff.insertBefore(item,ff.firstChild);
+  var reportPin=L.marker([s6Lat,s6Lng],{icon:mkU()})
+    .bindPopup('<b>'+tLabels[type]+'</b><br>'+esc(desc)+'<br><small>'+addr+'</small>')
+    .addTo(pinLayers['s6Map']);
+  reportPin.openPopup();
+  mapReg['s6Map'].flyTo([s6Lat,s6Lng],15,{duration:1});
+  var cnt=parseInt(document.getElementById('s6RptCount').textContent)||14;
+  document.getElementById('s6RptCount').textContent=cnt+1;
+  document.getElementById('s6Ok').style.display='block';
+  setTimeout(function(){document.getElementById('s6Ok').style.display='none';},3500);
+  document.getElementById('s6RptType').value='';
+  document.getElementById('s6RptCity').value='';
+  document.getElementById('s6Desc').value='';
+  document.getElementById('s6SelectedAddr').style.display='none';
+  document.getElementById('s6AddrText').textContent='';
+  s6Lat=null;s6Lng=null;
+}
+</script>
+</body>
+</html>

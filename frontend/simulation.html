@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1"/>
+  <title>CrisisCloud — Hurricane Irene Live Simulation</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',sans-serif;}
+    body{background:#0a1628;color:#e2e8f0;}
+    .topnav{background:#060e1c;border-bottom:1px solid rgba(96,165,250,.18);padding:0 20px;display:flex;align-items:center;gap:0;}
+    .topnav-brand{font-size:18px;font-weight:800;color:#f8fafc;letter-spacing:-.03em;padding:14px 18px 14px 0;border-right:1px solid rgba(96,165,250,.12);margin-right:4px;}
+    .topnav a{display:inline-block;padding:14px 16px;font-size:13px;font-weight:700;color:#94a3b8;text-decoration:none;border-bottom:3px solid transparent;}
+    .topnav a:hover{color:#e2e8f0;}
+    .topnav a.active{color:#60a5fa;border-bottom:3px solid #60a5fa;}
+    .sim-badge{display:inline-flex;align-items:center;gap:5px;margin-left:auto;padding:6px 12px;background:rgba(248,113,113,.14);border:1px solid rgba(248,113,113,.3);border-radius:999px;font-size:11px;font-weight:800;color:#fca5a5;letter-spacing:.06em;}
+    .sim-badge-dot{width:7px;height:7px;border-radius:50%;background:#f87171;animation:blink 1.2s infinite;}
+    @keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+    .tutorial-banner{background:rgba(96,165,250,.08);border-bottom:1px solid rgba(96,165,250,.18);padding:10px 20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+    .tut-title{font-size:13px;font-weight:800;color:#93c5fd;}
+    .tut-sub{font-size:12px;color:#64748b;margin-top:1px;}
+    .steps-bar{display:flex;gap:0;border-bottom:1px solid rgba(96,165,250,.12);background:#080f1e;padding:0 20px;overflow-x:auto;}
+    .step-btn{padding:11px 16px;font-size:12px;font-weight:700;color:#475569;background:none;border:none;border-bottom:3px solid transparent;cursor:pointer;white-space:nowrap;font-family:inherit;}
+    .step-btn.done{color:#34d399;}
+    .step-btn.done::before{content:'✓ ';}
+    .step-btn.active{color:#60a5fa;border-bottom:3px solid #60a5fa;}
+    .step-btn:hover{color:#e2e8f0;}
+    .step-panel{display:none;padding:20px;}
+    .step-panel.visible{display:block;}
+    .step-card{background:rgba(16,28,52,0.92);border:1px solid rgba(96,165,250,.15);border-radius:18px;padding:20px;max-width:820px;margin:0 auto;}
+    .step-number{display:inline-block;background:rgba(96,165,250,.18);color:#60a5fa;font-size:11px;font-weight:800;letter-spacing:.1em;padding:4px 10px;border-radius:999px;margin-bottom:10px;}
+    .step-title{font-size:20px;font-weight:800;color:#f8fafc;margin-bottom:6px;letter-spacing:-.02em;}
+    .step-desc{font-size:14px;color:#94a3b8;line-height:1.65;margin-bottom:16px;}
+    .step-desc strong{color:#e2e8f0;font-weight:700;}
+    .callout{background:rgba(251,191,36,.08);border:1px solid rgba(251,191,36,.22);border-radius:12px;padding:12px 14px;margin:12px 0;font-size:13px;color:#fde68a;line-height:1.55;}
+    .callout-red{background:rgba(248,113,113,.08);border:1px solid rgba(248,113,113,.22);border-radius:12px;padding:12px 14px;margin:12px 0;font-size:13px;color:#fca5a5;line-height:1.55;}
+    .callout-green{background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.22);border-radius:12px;padding:12px 14px;margin:12px 0;font-size:13px;color:#6ee7b7;line-height:1.55;}
+    .step-nav{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding-top:16px;border-top:1px solid rgba(96,165,250,.1);}
+    .btn-nav{padding:10px 20px;border-radius:12px;font-size:13px;font-weight:800;cursor:pointer;border:1px solid rgba(96,165,250,.25);background:rgba(96,165,250,.1);color:#93c5fd;font-family:inherit;}
+    .btn-nav:hover{background:rgba(96,165,250,.2);}
+    .btn-nav.primary{background:rgba(96,165,250,.85);color:#081023;border:none;}
+    .btn-nav.primary:hover{background:#60a5fa;}
+    .btn-nav:disabled{opacity:.35;cursor:not-allowed;}
+    .progress-text{font-size:12px;color:#475569;}
+    .hdr{background:#0a1425;border-bottom:1px solid rgba(248,113,113,0.3);padding:12px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;}
+    .logo{font-size:20px;font-weight:800;color:#f8fafc;letter-spacing:-.03em;}
+    .live-pill{display:flex;align-items:center;gap:6px;background:rgba(248,113,113,.18);border:1px solid rgba(248,113,113,.4);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:800;color:#fca5a5;letter-spacing:.06em;}
+    .clock-box{text-align:right;}
+    .clock-date{font-size:11px;color:#fbbf24;font-weight:800;letter-spacing:.08em;}
+    .clock-time{font-size:20px;font-weight:800;color:#f8fafc;letter-spacing:-.02em;font-variant-numeric:tabular-nums;}
+    .alert-strip{background:rgba(248,113,113,.12);border-bottom:1px solid rgba(248,113,113,.25);padding:8px 18px;display:flex;align-items:center;gap:10px;font-size:12px;flex-wrap:wrap;}
+    .sim-main{display:grid;grid-template-columns:minmax(0,1.15fr) 310px;gap:14px;padding:14px 18px;}
+    @media(max-width:860px){.sim-main{grid-template-columns:1fr;}}
+    .card{background:rgba(16,28,52,0.92);border:1px solid rgba(96,165,250,.15);border-radius:18px;padding:16px;margin-bottom:12px;}
+    .sect-label{font-size:10px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:#475569;margin-bottom:8px;}
+    .stat-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0 12px;}
+    .stat{background:rgba(255,255,255,.05);border:1px solid rgba(96,165,250,.1);border-radius:12px;padding:10px 12px;}
+    .stat-l{font-size:9px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:#475569;}
+    .stat-v{font-size:18px;font-weight:800;margin-top:3px;}
+    .red{color:#f87171;}.amber{color:#fbbf24;}.blue{color:#60a5fa;}.green{color:#34d399;}.purple{color:#c084fc;}
+    .map-wrap{width:100%;height:360px;border:1px solid rgba(96,165,250,.18);border-radius:14px;overflow:hidden;background:#0d1f3c;margin-bottom:10px;}
+    .legend{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:10px;}
+    .leg{display:flex;align-items:center;gap:5px;font-size:11px;color:#94a3b8;background:rgba(255,255,255,.04);border:1px solid rgba(96,165,250,.1);border-radius:999px;padding:4px 8px;}
+    .leg-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+    .feed{display:flex;flex-direction:column;gap:7px;max-height:190px;overflow-y:auto;}
+    .feed::-webkit-scrollbar{width:3px;}
+    .feed::-webkit-scrollbar-thumb{background:rgba(96,165,250,.25);border-radius:3px;}
+    .fi{background:rgba(255,255,255,.04);border:1px solid rgba(96,165,250,.1);border-radius:10px;padding:9px 11px;}
+    .fi-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;}
+    .ft{font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;letter-spacing:.05em;}
+    .ft-flood{background:rgba(96,165,250,.18);color:#93c5fd;}
+    .ft-surge{background:rgba(248,113,113,.18);color:#fca5a5;}
+    .ft-wind{background:rgba(251,191,36,.18);color:#fde68a;}
+    .ft-power{background:rgba(167,139,250,.18);color:#c4b5fd;}
+    .ft-road{background:rgba(52,211,153,.18);color:#6ee7b7;}
+    .fi-time{font-size:10px;color:#475569;}
+    .fi-msg{font-size:12px;color:#cbd5e1;line-height:1.4;}
+    .fi-loc{font-size:11px;color:#60a5fa;margin-top:2px;}
+    .fi-user{color:#c084fc;}
+    select,input,textarea{width:100%;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(10,16,34,.95);color:#e2e8f0;font-size:13px;font-family:inherit;}
+    select:focus,input:focus,textarea:focus{outline:none;border-color:rgba(96,165,250,.5);}
+    textarea{resize:vertical;min-height:66px;}
+    .rpt-row{display:flex;gap:8px;margin-bottom:8px;}
+    .rpt-row select{flex:1;}
+    .sub-btn{width:100%;padding:10px;border-radius:12px;border:none;background:rgba(248,113,113,.85);color:#fff;font-size:13px;font-weight:800;cursor:pointer;margin-top:2px;font-family:inherit;}
+    .sub-btn:hover{background:#f87171;}
+    .ok-msg{background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.28);border-radius:10px;padding:9px 12px;font-size:12px;color:#6ee7b7;font-weight:700;display:none;margin-top:6px;}
+    .cond-row{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid rgba(255,255,255,.05);font-size:12px;}
+    .cond-row:last-child{border-bottom:none;}
+    .ck{color:#475569;}.cv{font-weight:700;}
+    .sh-item{background:rgba(255,255,255,.04);border:1px solid rgba(96,165,250,.1);border-radius:10px;padding:9px 11px;margin-bottom:7px;}
+    .sh-name{font-size:13px;font-weight:700;}
+    .sh-meta{font-size:11px;color:#475569;margin-top:2px;}
+    .stag{display:inline-block;font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;margin-top:4px;letter-spacing:.05em;}
+    .s-open{background:rgba(52,211,153,.18);color:#34d399;}
+    .s-lim{background:rgba(251,191,36,.18);color:#fbbf24;}
+  </style>
+</head>
+<body>
+
+<nav class="topnav">
+  <div class="topnav-brand">CrisisCloud</div>
+  <a href="/">Live Dashboard</a>
+  <a href="/simulation" class="active">Hurricane Simulation</a>
+  <div class="sim-badge"><div class="sim-badge-dot"></div>SIM RUNNING</div>
+</nav>
+
+<div class="tutorial-banner">
+  <div>
+    <div class="tut-title">Hurricane Irene — Interactive Simulation Tutorial</div>
+    <div class="tut-sub">Walk through each feature of CrisisCloud as if Irene were happening right now. The clock runs on real EST time.</div>
+  </div>
+</div>
+
+<div class="steps-bar">
+  <button class="step-btn active" onclick="goStep(0)" id="sb0">1 — Welcome</button>
+  <button class="step-btn" onclick="goStep(1)" id="sb1">2 — Reading the map</button>
+  <button class="step-btn" onclick="goStep(2)" id="sb2">3 — Storm data</button>
+  <button class="step-btn" onclick="goStep(3)" id="sb3">4 — Shelters</button>
+  <button class="step-btn" onclick="goStep(4)" id="sb4">5 — Submit a report</button>
+  <button class="step-btn" onclick="goStep(5)" id="sb5">6 — Live feed</button>
+  <button class="step-btn" onclick="goStep(6)" id="sb6">7 — Full dashboard</button>
+</div>
+
+<div class="step-panel visible" id="sp0">
+  <div class="step-card">
+    <div class="step-number">Step 1 of 7</div>
+    <div class="step-title">Welcome to the Hurricane Irene simulation</div>
+    <div class="step-desc">This tutorial walks you through every feature of CrisisCloud using a <strong>live re-creation of Hurricane Irene (August 27, 2011)</strong>. The clock runs on your real current EST time so it always feels active.</div>
+    <div class="callout-red">During Irene, Hampton Roads experienced storm surge of 4–8 ft, sustained winds of 70–80 mph, widespread power outages, and up to 12 inches of rainfall.</div>
+    <div class="callout">The full live dashboard is always one click away at the Live Dashboard tab above.</div>
+    <div class="step-nav">
+      <button class="btn-nav" disabled>Previous</button>
+      <span class="progress-text">1 of 7</span>
+      <button class="btn-nav primary" onclick="goStep(1)">Next — Reading the map</button>
+    </div>
+  </div>
+</div>
+
+<div class="step-panel" id="sp1">
+  <div class="step-card">
+    <div class="step-number">Step 2 of 7</div>
+    <div class="step-title">Reading the emergency map</div>
+    <div class="step-desc">Each icon type tells you something different. Use the city filter to focus on one jurisdiction during a real event.</div>
+    <div class="callout"><strong>Blue S</strong> — shelters. <strong>Blue F</strong> — flooding zones. <strong>Red triangles</strong> — incidents. <strong>Purple !</strong> — citizen reports.</div>
+    <div class="callout-red">Irene's eye passed east of the coast but the bay funnel shape pushed 4–8 ft of surge into Hampton Roads.</div>
+    <div style="margin:14px 0;">
+      <div class="legend">
+        <div class="leg"><div class="leg-dot" style="background:#34d399;"></div>Shelter open</div>
+        <div class="leg"><div class="leg-dot" style="background:#fbbf24;"></div>Limited</div>
+        <div class="leg"><div class="leg-dot" style="background:#60a5fa;"></div>Flooding</div>
+        <div class="leg"><div class="leg-dot" style="background:#f87171;"></div>Incident</div>
+        <div class="leg"><div class="leg-dot" style="background:#c084fc;"></div>Your report</div>
+      </div>
+      <div class="map-wrap">
+        <svg width="100%" height="100%" viewBox="0 0 660 360" xmlns="http://www.w3.org/2000/svg">
+          <rect width="660" height="360" fill="#0d1f3c"/>
+          <path d="M50,50 Q130,32 210,46 Q280,58 350,42 Q420,28 490,52 Q540,66 590,78 Q630,88 650,110 L660,188 Q635,218 610,248 Q582,282 562,312 L552,355 L438,355 L436,375 Q418,358 396,338 Q365,312 344,285 Q323,260 295,246 Q258,230 238,207 Q218,187 196,178 Q166,168 146,188 Q125,208 106,198 Q85,188 66,168 Q46,148 37,121 Q28,94 50,50Z" fill="rgba(21,101,192,0.14)" stroke="rgba(96,165,250,0.18)" stroke-width="0.8"/>
+          <text x="320" y="16" text-anchor="middle" fill="rgba(96,165,250,0.22)" font-size="9" font-weight="700" letter-spacing="2">CHESAPEAKE BAY</text>
+          <text x="568" y="100" text-anchor="middle" fill="rgba(96,165,250,0.18)" font-size="8">ATLANTIC OCEAN</text>
+          <ellipse cx="402" cy="65" rx="78" ry="58" fill="rgba(248,113,113,0.05)" stroke="rgba(248,113,113,0.14)" stroke-width="1" stroke-dasharray="5,3"/>
+          <ellipse cx="402" cy="65" rx="44" ry="33" fill="rgba(248,113,113,0.07)" stroke="rgba(248,113,113,0.2)" stroke-width="1" stroke-dasharray="4,3"/>
+          <ellipse cx="402" cy="65" rx="16" ry="12" fill="rgba(248,113,113,0.18)" stroke="rgba(248,113,113,0.48)" stroke-width="1.5"/>
+          <text x="402" y="69" text-anchor="middle" fill="#f87171" font-size="7" font-weight="800">IRENE</text>
+          <defs><marker id="arr2" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5Z" fill="rgba(248,113,113,0.5)"/></marker></defs>
+          <path d="M402,65 Q428,128 448,182 Q466,238 488,292" fill="none" stroke="rgba(248,113,113,0.4)" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#arr2)"/>
+          <g transform="translate(203,222)"><circle r="9" fill="#1d4ed8" stroke="#34d399" stroke-width="2.5"/><text y="4" text-anchor="middle" fill="white" font-size="9" font-weight="800">S</text></g>
+          <g transform="translate(230,250)"><circle r="9" fill="#1d4ed8" stroke="#34d399" stroke-width="2.5"/><text y="4" text-anchor="middle" fill="white" font-size="9" font-weight="800">S</text></g>
+          <g transform="translate(358,290)"><circle r="9" fill="#1d4ed8" stroke="#fbbf24" stroke-width="2.5"/><text y="4" text-anchor="middle" fill="white" font-size="9" font-weight="800">S</text></g>
+          <g transform="translate(270,320)"><circle r="9" fill="#1d4ed8" stroke="#34d399" stroke-width="2.5"/><text y="4" text-anchor="middle" fill="white" font-size="9" font-weight="800">S</text></g>
+          <g transform="translate(180,196)"><circle r="8" fill="#1e3a8a" stroke="#60a5fa" stroke-width="2"/><text y="4" text-anchor="middle" fill="white" font-size="8" font-weight="800">F</text></g>
+          <g transform="translate(158,234)"><circle r="8" fill="#1e3a8a" stroke="#60a5fa" stroke-width="2"/><text y="4" text-anchor="middle" fill="white" font-size="8" font-weight="800">F</text></g>
+          <g transform="translate(418,300)"><circle r="8" fill="#1e3a8a" stroke="#60a5fa" stroke-width="2"/><text y="4" text-anchor="middle" fill="white" font-size="8" font-weight="800">F</text></g>
+          <g transform="translate(174,268)"><circle r="8" fill="#1e3a8a" stroke="#60a5fa" stroke-width="2"/><text y="4" text-anchor="middle" fill="white" font-size="8" font-weight="800">F</text></g>
+          <g transform="translate(216,200)"><polygon points="0,-9 8,5 -8,5" fill="#b91c1c" stroke="#f87171" stroke-width="1.5"/></g>
+          <g transform="translate(251,296)"><polygon points="0,-9 8,5 -8,5" fill="#b91c1c" stroke="#f87171" stroke-width="1.5"/></g>
+          <g transform="translate(166,249)"><polygon points="0,-9 8,5 -8,5" fill="#b91c1c" stroke="#f87171" stroke-width="1.5"/></g>
+          <text x="213" y="238" fill="#93c5fd" font-size="8" font-weight="700">NORFOLK</text>
+          <text x="344" y="310" fill="#93c5fd" font-size="7">VA BEACH</text>
+          <text x="260" y="338" fill="#93c5fd" font-size="7">CHESAPEAKE</text>
+          <text x="156" y="284" fill="#93c5fd" font-size="7">PORTSMOUTH</text>
+        </svg>
+      </div>
+    </div>
+    <div class="step-nav">
+      <button class="btn-nav" onclick="goStep(0)">Previous</button>
+      <span class="progress-text">2 of 7</span>
+      <button class="btn-nav primary" onclick="goStep(2)">Next — Storm data</button>
+    </div>
+  </div>
+</div>
+
+<div class="step-panel" id="sp2">
+  <div class="step-card">
+    <div class="step-number">Step 3 of 7</div>
+    <div class="step-title">Reading the storm data panel</div>
+    <div class="step-desc">The sidebar shows live conditions from NWS Wakefield. The clock always shows real current EST time.</div>
+    <div style="background:rgba(16,28,52,0.92);border:1px solid rgba(96,165,250,.15);border-radius:14px;padding:14px;margin:12px 0;">
+      <div class="sect-label">Current storm data</div>
+      <div class="cond-row"><span class="ck">Local time (EST)</span><span class="cv amber" id="tutTime">--</span></div>
+      <div class="cond-row"><span class="ck">Storm</span><span class="cv red">Hurricane Irene — Cat 1</span></div>
+      <div class="cond-row"><span class="ck">Center</span><span class="cv red">Cape Lookout, NC</span></div>
+      <div class="cond-row"><span class="ck">Sustained winds</span><span class="cv red">75–80 mph</span></div>
+      <div class="cond-row"><span class="ck">Storm surge</span><span class="cv red">4–8 ft above tide</span></div>
+      <div class="cond-row"><span class="ck">Rainfall so far</span><span class="cv blue">6.2 in</span></div>
+      <div class="cond-row"><span class="ck">Pressure</span><span class="cv amber">975 mb falling</span></div>
+      <div class="cond-row"><span class="ck">Visibility</span><span class="cv amber">Under 1 mile</span></div>
+    </div>
+    <div class="callout-green">In the real dashboard these values are pulled live from the NWS /api/weather/live endpoint using the map center coordinates.</div>
+    <div class="step-nav">
+      <button class="btn-nav" onclick="goStep(1)">Previous</button>
+      <span class="progress-text">3 of 7</span>
+      <button class="btn-nav primary" onclick="goStep(3)">Next — Shelters</button>
+    </div>
+  </div>
+</div>
+
+<div class="step-panel" id="sp3">
+  <div class="step-card">
+    <div class="step-number">Step 4 of 7</div>
+    <div class="step-title">Finding open shelters</div>
+    <div class="step-desc">Four major shelters opened across Hampton Roads. Green = open, yellow = limited capacity.</div>
+    <div style="margin:12px 0;">
+      <div class="sh-item"><div class="sh-name">Norfolk Recreation Center</div><div class="sh-meta">Norview Ave, Norfolk &bull; (757) 441-2400 &bull; 450 beds</div><span class="stag s-open">Open</span></div>
+      <div class="sh-item"><div class="sh-name">Lake Taylor High School</div><div class="sh-meta">Kleen St, Norfolk &bull; (757) 441-2000 &bull; 280 beds</div><span class="stag s-open">Open</span></div>
+      <div class="sh-item"><div class="sh-name">VB Convention Center</div><div class="sh-meta">19th St, Virginia Beach &bull; (757) 385-2000 &bull; 120 beds</div><span class="stag s-lim">Limited</span></div>
+      <div class="sh-item"><div class="sh-name">Oscar Smith High School</div><div class="sh-meta">Chesapeake &bull; (757) 547-9300 &bull; 350 beds</div><span class="stag s-open">Open</span></div>
+    </div>
+    <div class="callout">Clicking any shelter card in the full dashboard zooms the map to that location. Organizations can update status and capacity — changes sync to all dashboards within 5 seconds.</div>
+    <div class="step-nav">
+      <button class="btn-nav" onclick="goStep(2)">Previous</button>
+      <span class="progress-text">4 of 7</span>
+      <button class="btn-nav primary" onclick="goStep(4)">Next — Submit a report</button>
+    </div>
+  </div>
+</div>
+
+<div class="step-panel" id="sp4">
+  <div class="step-card">
+    <div class="step-number">Step 5 of 7</div>
+    <div class="step-title">Try it — submit a field report</div>
+    <div class="step-desc">Fill in the form as if you are reporting something during Hurricane Irene. Your entry will appear in the live feed in step 6 with a real EST timestamp.</div>
+    <div class="callout">Try something like: "Flooding on Granby St near downtown, water about 18 inches deep" or "Power out on Colonial Ave since 9:50 AM".</div>
+    <div style="margin:14px 0;">
+      <div class="rpt-row">
+        <select id="tRptType"><option value="">Incident type...</option><option value="flood">Flooding</option><option value="surge">Storm surge</option><option value="wind">Wind damage</option><option value="power">Power outage</option><option value="road">Road closed</option><option value="other">Other</option></select>
+        <select id="tRptCity"><option value="">City...</option><option value="Norfolk">Norfolk</option><option value="Virginia Beach">Virginia Beach</option><option value="Chesapeake">Chesapeake</option><option value="Portsmouth">Portsmouth</option><option value="Suffolk">Suffolk</option></select>
+      </div>
+      <input type="text" id="tRptLoc" placeholder="Street or neighborhood" style="margin-bottom:8px;"/>
+      <textarea id="tRptDesc" placeholder="Describe what you are seeing..." style="margin-bottom:8px;"></textarea>
+      <button class="sub-btn" onclick="tutSubmit()">Submit report</button>
+      <div class="ok-msg" id="tutOk">Report saved — it will appear at the top of the feed in step 6.</div>
+    </div>
+    <div class="step-nav">
+      <button class="btn-nav" onclick="goStep(3)">Previous</button>
+      <span class="progress-text">5 of 7</span>
+      <button class="btn-nav primary" onclick="goStep(5)">Next — Live feed</button>
+    </div>
+  </div>
+</div>
+
+<div class="step-panel" id="sp5">
+  <div class="step-card">
+    <div class="step-number">Step 6 of 7</div>
+    <div class="step-title">The live citizen reports feed</div>
+    <div class="step-desc">Every report flows into this feed in real time. Your report from step 5 appears at the top.</div>
+    <div class="feed" id="tutFeed" style="max-height:280px;margin:12px 0;">
+      <div class="fi"><div class="fi-top"><span class="ft ft-surge">Storm surge</span><span class="fi-time" id="tft0"></span></div><div class="fi-msg">Water coming over the seawall at Willoughby Spit — 3 ft of flooding on Shore Dr.</div><div class="fi-loc">Norfolk — Willoughby Spit</div></div>
+      <div class="fi"><div class="fi-top"><span class="ft ft-wind">Wind damage</span><span class="fi-time" id="tft1"></span></div><div class="fi-msg">Large oak fell across Hampton Blvd near Gate 5, road completely blocked.</div><div class="fi-loc">Norfolk — Hampton Blvd</div></div>
+      <div class="fi"><div class="fi-top"><span class="ft ft-flood">Flooding</span><span class="fi-time" id="tft2"></span></div><div class="fi-msg">Battlefield Blvd underwater between Greenbrier Pkwy and Cedar Rd, roughly 2 ft deep.</div><div class="fi-loc">Chesapeake — Battlefield Blvd</div></div>
+      <div class="fi"><div class="fi-top"><span class="ft ft-power">Power outage</span><span class="fi-time" id="tft3"></span></div><div class="fi-msg">Entire Ghent neighborhood dark, transformer blew on Colonial Ave.</div><div class="fi-loc">Norfolk — Ghent</div></div>
+      <div class="fi"><div class="fi-top"><span class="ft ft-road">Road closed</span><span class="fi-time" id="tft4"></span></div><div class="fi-msg">Indian River Rd closed at bridge — debris and flooding.</div><div class="fi-loc">Chesapeake — Indian River Rd</div></div>
+    </div>
+    <div class="callout-green">In the full dashboard the feed polls the backend every 5 seconds. Reports from any connected device appear across all screens simultaneously.</div>
+    <div class="step-nav">
+      <button class="btn-nav" onclick="goStep(4)">Previous</button>
+      <span class="progress-text">6 of 7</span>
+      <button class="btn-nav primary" onclick="goStep(6)">Next — Full dashboard</button>
+    </div>
+  </div>
+</div>
+
+<div class="step-panel" id="sp6">
+  <div class="step-card" style="max-width:100%;">
+    <div class="step-number">Step 7 of 7</div>
+    <div class="step-title">Full live simulation</div>
+    <div class="step-desc" style="margin-bottom:14px;">Everything running together — real EST clock, live feed, map, shelters, storm data, and report form.</div>
+    <div class="callout-green" style="margin-bottom:14px;">Tutorial complete. Submit more reports below or click Live Dashboard in the top nav to return to the real operational dashboard.</div>
+    <div style="border:1px solid rgba(96,165,250,.18);border-radius:14px;overflow:hidden;">
+      <div class="hdr">
+        <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+          <div class="logo">CrisisCloud</div>
+          <div class="live-pill"><div style="width:7px;height:7px;border-radius:50%;background:#f87171;animation:blink 1.2s infinite;"></div>LIVE</div>
+          <div style="font-size:11px;color:#94a3b8;">Hampton Roads Emergency Operations</div>
+        </div>
+        <div class="clock-box">
+          <div class="clock-date" id="simDate2"></div>
+          <div class="clock-time" id="simTime2"></div>
+        </div>
+      </div>
+      <div class="alert-strip">
+        <div style="width:8px;height:8px;border-radius:50%;background:#f87171;flex-shrink:0;animation:blink 1.2s infinite;"></div>
+        <span style="color:#fca5a5;font-weight:700;">ACTIVE — HURRICANE WARNING &bull; STORM SURGE WARNING &bull; FLASH FLOOD WATCH</span>
+        <span style="color:#fbbf24;margin-left:6px;">Hurricane Irene — 75 mph sustained winds</span>
+      </div>
+      <div class="sim-main">
+        <div>
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:6px;">
+              <div style="font-size:14px;font-weight:800;">Regional emergency map</div>
+              <select id="simCityFilter" style="width:auto;font-size:12px;padding:5px 9px;" onchange="simFilterCity(this.value)">
+                <option value="All">All cities</option>
+                <option value="Norfolk" selected>Norfolk</option>
+                <option value="Virginia Beach">Virginia Beach</option>
+                <option value="Chesapeake">Chesapeake</option>
+                <option value="Portsmouth">Portsmouth</option>
+              </select>
+            </div>
+            <div class="stat-row">
+              <div class="stat"><div class="stat-l">Shelters</div><div class="stat-v green">4</div></div>
+              <div class="stat"><div class="stat-l">Reports</div><div class="stat-v blue" id="simStatRpt">14</div></div>
+              <div class="stat"><div class="stat-l">Roads closed</div><div class="stat-v amber">12+</div></div>
+              <div class="stat"><div class="stat-l">Max wind</div><div class="stat-v red">75 mph</div></div>
+            </div>
+            <div class="map-wrap" style="height:300px;">
+              <svg width="100%" height="100%" viewBox="0 0 660 300" xmlns="http://www.w3.org/2000/svg">
+                <rect width="660" height="300" fill="#0d1f3c"/>
+                <path d="M50,40 Q130,24 210,38 Q280,50 350,35 Q420,22 490,44 Q540,57 590,68 Q630,78 650,98 L660,170 Q635,198 610,226 Q582,260 562,288 L552,300 L438,300 L436,318 Q416,302 395,282 Q364,257 343,231 Q322,207 294,194 Q257,179 237,157 Q217,137 195,129 Q165,119 145,138 Q124,157 105,148 Q84,138 65,119 Q45,100 36,75 Q27,50 50,40Z" fill="rgba(21,101,192,0.14)" stroke="rgba(96,165,250,0.18)" stroke-width="0.8"/>
+                <text x="320" y="14" text-anchor="middle" fill="rgba(96,165,250,0.22)" font-size="8" font-weight="700" letter-spacing="2">CHESAPEAKE BAY</text>
+                <ellipse cx="400" cy="55" rx="72" ry="52" fill="rgba(248,113,113,0.05)" stroke="rgba(248,113,113,0.14)" stroke-width="1" stroke-dasharray="5,3"/>
+                <ellipse cx="400" cy="55" rx="40" ry="29" fill="rgba(248,113,113,0.07)" stroke="rgba(248,113,113,0.2)" stroke-width="1" stroke-dasharray="4,3"/>
+                <ellipse cx="400" cy="55" rx="14" ry="10" fill="rgba(248,113,113,0.18)" stroke="rgba(248,113,113,0.48)" stroke-width="1.5"/>
+                <text x="400" y="59" text-anchor="middle" fill="#f87171" font-size="7" font-weight="800">IRENE</text>
+                <defs><marker id="arr3" markerWidth="5" markerHeight="5" refX="2.5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5Z" fill="rgba(248,113,113,0.5)"/></marker></defs>
+                <path d="M400,55 Q424,112 443,164 Q460,215 481,264" fill="none" stroke="rgba(248,113,113,0.4)" stroke-width="1.8" stroke-dasharray="5,3" marker-end="url(#arr3)"/>
+                <g id="simBaseMarkers">
+                  <g class="smrkr" data-city="Norfolk" transform="translate(198,198)"><circle r="9" fill="#1d4ed8" stroke="#34d399" stroke-width="2.5"/><text y="4" text-anchor="middle" fill="white" font-size="9" font-weight="800">S</text></g>
+                  <g class="smrkr" data-city="Norfolk" transform="translate(222,222)"><circle r="9" fill="#1d4ed8" stroke="#34d399" stroke-width="2.5"/><text y="4" text-anchor="middle" fill="white" font-size="9" font-weight="800">S</text></g>
+                  <g class="smrkr" data-city="Virginia Beach" transform="translate(350,258)"><circle r="9" fill="#1d4ed8" stroke="#fbbf24" stroke-width="2.5"/><text y="4" text-anchor="middle" fill="white" font-size="9" font-weight="800">S</text></g>
+                  <g class="smrkr" data-city="Chesapeake" transform="translate(262,282)"><circle r="9" fill="#1d4ed8" stroke="#34d399" stroke-width="2.5"/><text y="4" text-anchor="middle" fill="white" font-size="9" font-weight="800">S</text></g>
+                  <g class="smrkr" data-city="Norfolk" transform="translate(175,174)"><circle r="8" fill="#1e3a8a" stroke="#60a5fa" stroke-width="2"/><text y="4" text-anchor="middle" fill="white" font-size="8" font-weight="800">F</text></g>
+                  <g class="smrkr" data-city="Norfolk" transform="translate(153,208)"><circle r="8" fill="#1e3a8a" stroke="#60a5fa" stroke-width="2"/><text y="4" text-anchor="middle" fill="white" font-size="8" font-weight="800">F</text></g>
+                  <g class="smrkr" data-city="Virginia Beach" transform="translate(410,268)"><circle r="8" fill="#1e3a8a" stroke="#60a5fa" stroke-width="2"/><text y="4" text-anchor="middle" fill="white" font-size="8" font-weight="800">F</text></g>
+                  <g class="smrkr" data-city="Portsmouth" transform="translate(166,240)"><circle r="8" fill="#1e3a8a" stroke="#60a5fa" stroke-width="2"/><text y="4" text-anchor="middle" fill="white" font-size="8" font-weight="800">F</text></g>
+                  <g class="smrkr" data-city="Norfolk" transform="translate(208,180)"><polygon points="0,-9 8,5 -8,5" fill="#b91c1c" stroke="#f87171" stroke-width="1.5"/></g>
+                  <g class="smrkr" data-city="Chesapeake" transform="translate(243,264)"><polygon points="0,-9 8,5 -8,5" fill="#b91c1c" stroke="#f87171" stroke-width="1.5"/></g>
+                  <g class="smrkr" data-city="Portsmouth" transform="translate(158,224)"><polygon points="0,-9 8,5 -8,5" fill="#b91c1c" stroke="#f87171" stroke-width="1.5"/></g>
+                </g>
+                <g id="simUserPins"></g>
+                <text x="207" y="212" fill="#93c5fd" font-size="8" font-weight="700">NORFOLK</text>
+                <text x="337" y="275" fill="#93c5fd" font-size="7">VA BEACH</text>
+                <text x="251" y="298" fill="#93c5fd" font-size="7">CHESAPEAKE</text>
+                <text x="149" y="254" fill="#93c5fd" font-size="7">PORTSMOUTH</text>
+              </svg>
+            </div>
+          </div>
+          <div class="card">
+            <div class="sect-label">Live citizen reports feed</div>
+            <div class="feed" id="simFeed">
+              <div class="fi"><div class="fi-top"><span class="ft ft-surge">Storm surge</span><span class="fi-time" id="sft0"></span></div><div class="fi-msg">Water coming over the seawall at Willoughby Spit — 3 ft of flooding on Shore Dr.</div><div class="fi-loc">Norfolk — Willoughby Spit</div></div>
+              <div class="fi"><div class="fi-top"><span class="ft ft-wind">Wind damage</span><span class="fi-time" id="sft1"></span></div><div class="fi-msg">Large oak fell across Hampton Blvd near Gate 5.</div><div class="fi-loc">Norfolk — Hampton Blvd</div></div>
+              <div class="fi"><div class="fi-top"><span class="ft ft-flood">Flooding</span><span class="fi-time" id="sft2"></span></div><div class="fi-msg">Battlefield Blvd underwater between Greenbrier Pkwy and Cedar Rd.</div><div class="fi-loc">Chesapeake — Battlefield Blvd</div></div>
+              <div class="fi"><div class="fi-top"><span class="ft ft-power">Power outage</span><span class="fi-time" id="sft3"></span></div><div class="fi-msg">Entire Ghent neighborhood dark, transformer blew on Colonial Ave.</div><div class="fi-loc">Norfolk — Ghent</div></div>
+              <div class="fi"><div class="fi-top"><span class="ft ft-road">Road closed</span><span class="fi-time" id="sft4"></span></div><div class="fi-msg">Indian River Rd closed at bridge — debris and flooding.</div><div class="fi-loc">Chesapeake — Indian River Rd</div></div>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <div class="sect-label">Current storm data</div>
+            <div class="cond-row"><span class="ck">Local time (EST)</span><span class="cv amber" id="simSideTime"></span></div>
+            <div class="cond-row"><span class="ck">Storm</span><span class="cv red">Hurricane Irene — Cat 1</span></div>
+            <div class="cond-row"><span class="ck">Center</span><span class="cv red">Cape Lookout, NC</span></div>
+            <div class="cond-row"><span class="ck">Sustained winds</span><span class="cv red">75–80 mph</span></div>
+            <div class="cond-row"><span class="ck">Storm surge</span><span class="cv red">4–8 ft above tide</span></div>
+            <div class="cond-row"><span class="ck">Rainfall so far</span><span class="cv blue">6.2 in</span></div>
+            <div class="cond-row"><span class="ck">Pressure</span><span class="cv amber">975 mb falling</span></div>
+            <div class="cond-row"><span class="ck">Visibility</span><span class="cv amber">Under 1 mile</span></div>
+          </div>
+          <div class="card">
+            <div class="sect-label">Open shelters</div>
+            <div class="sh-item"><div class="sh-name">Norfolk Recreation Center</div><div class="sh-meta">(757) 441-2400 &bull; 450 beds</div><span class="stag s-open">Open</span></div>
+            <div class="sh-item"><div class="sh-name">Lake Taylor High School</div><div class="sh-meta">(757) 441-2000 &bull; 280 beds</div><span class="stag s-open">Open</span></div>
+            <div class="sh-item"><div class="sh-name">VB Convention Center</div><div class="sh-meta">(757) 385-2000 &bull; 120 beds</div><span class="stag s-lim">Limited</span></div>
+            <div class="sh-item"><div class="sh-name">Oscar Smith High School</div><div class="sh-meta">(757) 547-9300 &bull; 350 beds</div><span class="stag s-open">Open</span></div>
+          </div>
+          <div class="card">
+            <div class="sect-label">Submit a field report</div>
+            <div class="rpt-row">
+              <select id="sRptType"><option value="">Incident type...</option><option value="flood">Flooding</option><option value="surge">Storm surge</option><option value="wind">Wind damage</option><option value="power">Power outage</option><option value="road">Road closed</option><option value="other">Other</option></select>
+              <select id="sRptCity"><option value="">City...</option><option value="Norfolk">Norfolk</option><option value="Virginia Beach">Virginia Beach</option><option value="Chesapeake">Chesapeake</option><option value="Portsmouth">Portsmouth</option><option value="Suffolk">Suffolk</option></select>
+            </div>
+            <input type="text" id="sRptLoc" placeholder="Street or neighborhood" style="margin-bottom:8px;"/>
+            <textarea id="sRptDesc" placeholder="Describe what you are seeing..." style="margin-bottom:8px;"></textarea>
+            <button class="sub-btn" onclick="simSubmit()">Submit report</button>
+            <div class="ok-msg" id="simOk">Report received — added to feed and map.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+var DAYS=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+var MONTHS=['January','February','March','April','May','June','July','August','September','October','November','December'];
+function getEST(){var n=new Date();return new Date(n.getTime()+n.getTimezoneOffset()*60000+(-5*3600000));}
+function pad(n){return n<10?'0'+n:String(n);}
+function fmtTime(d){var h=d.getHours(),m=d.getMinutes(),s=d.getSeconds(),ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+pad(m)+':'+pad(s)+' '+ap+' EST';}
+function fmtDate(d){return DAYS[d.getDay()]+', '+MONTHS[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();}
+function fmtShort(d){var h=d.getHours(),m=d.getMinutes(),ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+pad(m)+' '+ap;}
+var tutReport=null;
+var currentStep=0;
+var completed=[];
+function seedTimes(){
+  var now=getEST();
+  var offs=[7,21,33,45,58];
+  ['tft','sft'].forEach(function(pre){offs.forEach(function(o,i){var el=document.getElementById(pre+i);if(el){var t=new Date(now.getTime()-o*60000);el.textContent=fmtShort(t)+' EST';}});});
+}
+function tick(){
+  var est=getEST();
+  var ts=fmtTime(est),ds=fmtDate(est),ss=fmtShort(est)+' EST';
+  var t=document.getElementById('tutTime');if(t)t.textContent=ts;
+  var s2=document.getElementById('simDate2');if(s2)s2.textContent=ds;
+  var t2=document.getElementById('simTime2');if(t2)t2.textContent=ts;
+  var st=document.getElementById('simSideTime');if(st)st.textContent=ts;
+}
+tick();seedTimes();setInterval(tick,1000);
+function goStep(n){
+  document.querySelectorAll('.step-panel').forEach(function(p){p.classList.remove('visible');});
+  document.getElementById('sp'+n).classList.add('visible');
+  document.querySelectorAll('.step-btn').forEach(function(b,i){b.classList.remove('active');if(completed.indexOf(i)>-1)b.classList.add('done');else b.classList.remove('done');});
+  if(completed.indexOf(currentStep)===-1)completed.push(currentStep);
+  document.getElementById('sb'+currentStep).classList.add('done');
+  currentStep=n;
+  document.getElementById('sb'+n).classList.remove('done');
+  document.getElementById('sb'+n).classList.add('active');
+  if(n===5&&tutReport){var feed=document.getElementById('tutFeed');var existing=feed.querySelector('.fi-user');if(!existing){feed.insertBefore(tutReport.cloneNode(true),feed.firstChild);}}
+  if(n===6&&tutReport){var sf=document.getElementById('simFeed');var ex=sf.querySelector('.fi-user');if(!ex){sf.insertBefore(tutReport.cloneNode(true),sf.firstChild);}}
+  window.scrollTo(0,0);
+}
+var tLabels={flood:'Flooding',surge:'Storm surge',wind:'Wind damage',power:'Power outage',road:'Road closed',other:'Report'};
+var tCls={flood:'ft-flood',surge:'ft-surge',wind:'ft-wind',power:'ft-power',road:'ft-road',other:'ft-flood'};
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function tutSubmit(){
+  var type=document.getElementById('tRptType').value;
+  var city=document.getElementById('tRptCity').value;
+  var loc=document.getElementById('tRptLoc').value.trim();
+  var desc=document.getElementById('tRptDesc').value.trim();
+  if(!type||!city||!desc){alert('Please select a type, city, and describe the incident.');return;}
+  var now=getEST();
+  var item=document.createElement('div');
+  item.className='fi';
+  item.style.borderColor='rgba(192,132,252,0.4)';
+  item.innerHTML='<div class="fi-top"><span class="ft '+(tCls[type]||'ft-flood')+'">'+(tLabels[type]||'Report')+'</span><span class="fi-time">'+fmtShort(now)+' EST</span></div><div class="fi-msg">'+esc(desc)+'</div><div class="fi-loc fi-user">'+(city+(loc?' \u2014 '+loc:''))+' \u2014 your report</div>';
+  tutReport=item;
+  document.getElementById('tutOk').style.display='block';
+  document.getElementById('tRptType').value='';document.getElementById('tRptCity').value='';document.getElementById('tRptLoc').value='';document.getElementById('tRptDesc').value='';
+}
+var simPinSlots={Norfolk:[{x:214,y:210},{x:192,y:228},{x:230,y:186}],'Virginia Beach':[{x:362,y:272},{x:388,y:286}],Chesapeake:[{x:256,y:292},{x:274,y:276}],Portsmouth:[{x:174,y:252},{x:154,y:236}],Suffolk:[{x:200,y:320}]};
+var simPinIdx={Norfolk:0,'Virginia Beach':0,Chesapeake:0,Portsmouth:0,Suffolk:0};
+function simSubmit(){
+  var type=document.getElementById('sRptType').value;
+  var city=document.getElementById('sRptCity').value;
+  var loc=document.getElementById('sRptLoc').value.trim();
+  var desc=document.getElementById('sRptDesc').value.trim();
+  if(!type||!city||!desc){alert('Please select a type, city, and describe the incident.');return;}
+  var now=getEST();
+  var item=document.createElement('div');
+  item.className='fi';
+  item.style.borderColor='rgba(192,132,252,0.4)';
+  item.innerHTML='<div class="fi-top"><span class="ft '+(tCls[type]||'ft-flood')+'">'+(tLabels[type]||'Report')+'</span><span class="fi-time">'+fmtShort(now)+' EST</span></div><div class="fi-msg">'+esc(desc)+'</div><div class="fi-loc fi-user">'+(city+(loc?' \u2014 '+loc:''))+' \u2014 your report</div>';
+  var sf=document.getElementById('simFeed');sf.insertBefore(item,sf.firstChild);
+  var slots=simPinSlots[city]||simPinSlots.Norfolk;
+  var idx=simPinIdx[city]||0;simPinIdx[city]=(idx+1)%slots.length;
+  var pos=slots[idx];
+  var ns='http://www.w3.org/2000/svg';
+  var g=document.createElementNS(ns,'g');g.setAttribute('transform','translate('+pos.x+','+pos.y+')');g.setAttribute('class','smrkr');g.setAttribute('data-city',city);
+  var c=document.createElementNS(ns,'circle');c.setAttribute('r','8');c.setAttribute('fill','rgba(192,132,252,0.72)');c.setAttribute('stroke','#c084fc');c.setAttribute('stroke-width','2');
+  var t=document.createElementNS(ns,'text');t.setAttribute('y','4');t.setAttribute('text-anchor','middle');t.setAttribute('fill','white');t.setAttribute('font-size','8');t.setAttribute('font-weight','800');t.textContent='!';
+  g.appendChild(c);g.appendChild(t);document.getElementById('simUserPins').appendChild(g);
+  var cnt=parseInt(document.getElementById('simStatRpt').textContent)||14;document.getElementById('simStatRpt').textContent=cnt+1;
+  document.getElementById('sRptType').value='';document.getElementById('sRptCity').value='';document.getElementById('sRptLoc').value='';document.getElementById('sRptDesc').value='';
+  var ok=document.getElementById('simOk');ok.style.display='block';setTimeout(function(){ok.style.display='none';},3500);
+}
+function simFilterCity(val){document.querySelectorAll('.smrkr').forEach(function(m){m.style.opacity=(val==='All'||m.getAttribute('data-city')===val)?'1':'0.15';});}
+</script>
+</body>
+</html>
