@@ -11,7 +11,6 @@
     integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
     crossorigin=""
   />
-  <link rel="stylesheet" href="https://unpkg.com/leaflet-geosearch@3.11.1/dist/geosearch.css"/>  />
   <style>
     /* LOOKUP: FRONTEND-STYLES-THEME
        These variables define the main color system for dark and light mode.
@@ -1062,7 +1061,6 @@
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-geosearch@3.11.1/dist/geosearch.umd.js"></script>
 <script>
   // LOOKUP: FRONTEND-STATE
   // This section defines the shared frontend state for resources, filters,
@@ -1691,7 +1689,7 @@
 
   function mkReportIcon() {
     return L.divIcon({className:"",iconSize:[26,26],iconAnchor:[13,13],popupAnchor:[0,-15],
-      html:"<div style="width:26px;height:26px;border-radius:50%;background:rgba(192,132,252,0.82);border:2px solid #c084fc;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white;line-height:1;">!</div>"});
+      html:"<div style='width:26px;height:26px;border-radius:50%;background:rgba(192,132,252,0.82);border:2px solid #c084fc;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white;line-height:1;'>!</div>"});
   }
 
   function esc(s) { return s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;"); }
@@ -1713,14 +1711,13 @@
       const label = rptTLabels[r.type] || "Report";
       const time = fmtShortTime(r.submitted_at);
       const loc = r.city + (r.address ? ", " + r.address : "");
-      return "<div style="background:rgba(255,255,255,.04);border:1px solid rgba(96,165,250,.1);border-radius:10px;padding:9px 11px;">"
-        + "<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;flex-wrap:wrap;gap:4px;">"
-        + "<span style="font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;" class="" + cls + "">" + label + "</span>"
-        + "<span style="font-size:10px;color:#475569;">" + time + "</span></div>"
-        + "<div style="font-size:12px;color:#cbd5e1;line-height:1.4;">" + esc(r.description) + "</div>"
-        + "<div style="font-size:11px;color:#60a5fa;margin-top:2px;">" + esc(loc) + (r.reporter_name ? " - " + esc(r.reporter_name) : "") + "</div>"
-        + "</div>";
-    }).join("");
+      return "<div style='background:rgba(255,255,255,.04);border:1px solid rgba(96,165,250,.1);border-radius:10px;padding:9px 11px;'>"
+        + "<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;flex-wrap:wrap;gap:4px;'>"
+        + "<span style='font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;' class='" + cls + "'>" + label + "</span>"
+        + "<span style='font-size:10px;color:#475569;'>" + time + "</span></div>"
+        + "<div style='font-size:12px;color:#cbd5e1;line-height:1.4;'>" + esc(r.description) + "</div>"
+        + "<div style='font-size:11px;color:#60a5fa;margin-top:2px;'>" + esc(loc) + (r.reporter_name ? " - " + esc(r.reporter_name) : "") + "</div>"
+        + "</div>";    }).join("");
   }
 
   function renderReportPins(reports) {
@@ -1743,58 +1740,6 @@
       renderReportFeed(reports);
       renderReportPins(reports);
     } catch(e) { console.warn("Report feed unavailable", e); }
-  }
-
-  function setupReportAddressSearch() {
-    const inp = document.getElementById("rptAddr");
-    const drop = document.getElementById("rptAddrDrop");
-    if (!inp || !drop) return;
-    inp.addEventListener("input", function() {
-      const val = inp.value.trim();
-      drop.style.display = "none";
-      if (val.length < 3) return;
-      clearTimeout(rptGeoTimer);
-      drop.innerHTML = "<div style="padding:9px 12px;font-size:12px;color:#64748b;">Searching...</div>";
-      drop.style.display = "block";
-      rptGeoTimer = setTimeout(function() {
-        fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(val) + "&limit=6&countrycodes=us&viewbox=-77.0,36.4,-75.7,37.2&bounded=1")
-          .then(r => r.json())
-          .then(results => {
-            if (!results.length) {
-              return fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(val + ", Virginia") + "&limit=6&countrycodes=us");
-            }
-            return Promise.resolve({_data: results});
-          })
-          .then(r => r._data ? Promise.resolve(r._data) : r.json())
-          .then(results => {
-            drop.innerHTML = "";
-            if (!results || !results.length) {
-              drop.innerHTML = "<div style="padding:9px 12px;font-size:12px;color:#64748b;">No results found</div>";
-              return;
-            }
-            results.forEach(function(r) {
-              const d = document.createElement("div");
-              d.style.cssText = "padding:9px 12px;font-size:12px;color:#e2e8f0;cursor:pointer;border-bottom:1px solid rgba(96,165,250,.08);";
-              d.textContent = r.display_name;
-              d.onmouseenter = function() { d.style.background = "rgba(96,165,250,.14)"; };
-              d.onmouseleave = function() { d.style.background = ""; };
-              d.onclick = function() {
-                inp.value = r.display_name;
-                rptLat = parseFloat(r.lat);
-                rptLng = parseFloat(r.lon);
-                drop.style.display = "none";
-                document.getElementById("rptAddrText").textContent = r.display_name.split(",").slice(0,2).join(",");
-                document.getElementById("rptSelectedAddr").style.display = "block";
-                map.flyTo([rptLat, rptLng], 15, {duration: 1.2});
-              };
-              drop.appendChild(d);
-            });
-          }).catch(() => { drop.style.display = "none"; });
-      }, 350);
-    });
-    document.addEventListener("click", function(e) {
-      if (!inp.contains(e.target) && !drop.contains(e.target)) drop.style.display = "none";
-    });
   }
 
   function useMyLocationReport() {
@@ -1850,8 +1795,52 @@
     } catch(e) { alert("Something went wrong. Please try again."); }
   }
 
-  setupReportAddressSearch();
-  loadReports();
+
+  const rptInp = document.getElementById("rptAddr");
+  const rptDrop = document.getElementById("rptAddrDrop");
+  if (rptInp && rptDrop) {
+    rptInp.addEventListener("input", function() {
+      const val = rptInp.value.trim();
+      rptDrop.style.display = "none";
+      rptDrop.innerHTML = "";
+      if (val.length < 3) return;
+      clearTimeout(rptGeoTimer);
+      rptDrop.innerHTML = "<div style='padding:9px 12px;font-size:12px;color:#64748b;'>Searching...</div>";
+      rptDrop.style.display = "block";
+      rptGeoTimer = setTimeout(function() {
+        fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(val + " Virginia") + "&limit=8&countrycodes=us&viewbox=-77.0,36.4,-75.7,37.2&bounded=0")
+          .then(function(r) { return r.json(); })
+          .then(function(results) {
+            rptDrop.innerHTML = "";
+            if (!results || !results.length) {
+              rptDrop.innerHTML = "<div style='padding:9px 12px;font-size:12px;color:#64748b;'>No results found</div>";
+              return;
+            }
+            results.forEach(function(r) {
+              const d = document.createElement("div");
+              d.style.cssText = "padding:9px 12px;font-size:12px;color:#e2e8f0;cursor:pointer;border-bottom:1px solid rgba(96,165,250,.08);";
+              d.textContent = r.display_name;
+              d.onmouseenter = function() { d.style.background = "rgba(96,165,250,.14)"; };
+              d.onmouseleave = function() { d.style.background = ""; };
+              d.onclick = function() {
+                rptInp.value = r.display_name;
+                rptLat = parseFloat(r.lat);
+                rptLng = parseFloat(r.lon);
+                rptDrop.style.display = "none";
+                const short = r.display_name.split(",").slice(0,2).join(",");
+                document.getElementById("rptAddrText").textContent = short;
+                document.getElementById("rptSelectedAddr").style.display = "block";
+                map.flyTo([rptLat, rptLng], 15, {duration: 1.2});
+              };
+              rptDrop.appendChild(d);
+            });
+          }).catch(function() { rptDrop.style.display = "none"; });
+      }, 400);
+    });
+    document.addEventListener("click", function(e) {
+      if (!rptInp.contains(e.target) && !rptDrop.contains(e.target)) rptDrop.style.display = "none";
+    });
+  }  loadReports();
   window.setInterval(loadReports, 5000);</script>
 
 </body>
