@@ -416,6 +416,18 @@
     .resourceMarker.status-full,
     .resourceMarker.status-closed,
     .resourceMarker.status-busy { box-shadow: 0 0 0 7px rgba(153,27,27,0.88), 0 8px 16px rgba(0,0,0,0.25); }
+    .ft-flood,
+    .ft-surge,
+    .ft-wind,
+    .ft-power,
+    .ft-road {
+      color: #f8fafc;
+    }
+    .ft-flood { background: rgba(59, 130, 246, 0.7); }
+    .ft-surge { background: rgba(168, 85, 247, 0.7); }
+    .ft-wind { background: rgba(14, 165, 233, 0.7); }
+    .ft-power { background: rgba(245, 158, 11, 0.78); }
+    .ft-road { background: rgba(239, 68, 68, 0.76); }
     .resourceMarkerImage,
     .incidentMarkerImage {
       width: 22px;
@@ -840,6 +852,13 @@
   Weather: —
 </div>
 
+      <div class="mutedBox" id="reportFeedBox" style="margin-top:10px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+          <span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;">Live Field Reports</span>
+          <span style="font-size:11px;color:#64748b;" id="reportCount">0 reports</span>
+        </div>
+        <div id="reportFeed" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;"></div>
+      </div>
 <div class="mutedBox" id="alertsBox" style="margin-top:10px;">
   Alerts: —
 </div>
@@ -880,6 +899,45 @@
           <div class="insuranceName">Liberty Mutual</div>
           <div class="insuranceNote">Flexible home coverage options with disaster-specific add-ons.</div>
           <a class="insuranceLink" href="https://www.libertymutual.com" target="_blank" rel="noopener noreferrer">Visit Liberty Mutual</a>
+        </div>
+      </div>
+
+      <div class="weatherTitle">Recovery Resources</div>
+      <div class="insuranceGrid">
+        <div class="insuranceCard">
+          <div class="insuranceName">FEMA Disaster Assistance</div>
+          <div class="insuranceNote">Apply for federal disaster recovery assistance after major storm damage.</div>
+          <a class="insuranceLink" href="https://www.disasterassistance.gov/" target="_blank" rel="noopener noreferrer">Visit FEMA Assistance</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">FEMA Virginia Disaster Information</div>
+          <div class="insuranceNote">Check Virginia disaster declarations and designated recovery areas.</div>
+          <a class="insuranceLink" href="https://www.fema.gov/disaster/4291/designated-areas" target="_blank" rel="noopener noreferrer">View Virginia FEMA Info</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">American Red Cross Virginia Region</div>
+          <div class="insuranceNote">Find Red Cross shelter, disaster relief, and recovery support across Virginia.</div>
+          <a class="insuranceLink" href="https://www.redcross.org/local/virginia/about-us.html" target="_blank" rel="noopener noreferrer">Visit Red Cross Virginia</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">Virginia Emergency Management</div>
+          <div class="insuranceNote">Official state emergency management guidance, alerts, and preparedness resources.</div>
+          <a class="insuranceLink" href="https://www.vaemergency.gov" target="_blank" rel="noopener noreferrer">Visit VDEM</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">Dominion Energy Outage Center</div>
+          <div class="insuranceNote">Track outages and restoration status for power interruptions in Hampton Roads.</div>
+          <a class="insuranceLink" href="https://www.dominionenergy.com/outagecenter" target="_blank" rel="noopener noreferrer">Check Power Outages</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">511 Virginia</div>
+          <div class="insuranceNote">View road conditions, closures, and travel impacts during severe weather.</div>
+          <a class="insuranceLink" href="https://www.511virginia.org/" target="_blank" rel="noopener noreferrer">View 511 Virginia</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">Virginia Know Your Zone</div>
+          <div class="insuranceNote">Check coastal evacuation zones and hurricane evacuation guidance.</div>
+          <a class="insuranceLink" href="https://www.knowyourzoneva.org/" target="_blank" rel="noopener noreferrer">Check Evacuation Zone</a>
         </div>
       </div>
     </section>
@@ -992,6 +1050,41 @@
         </div>
       </details>
 
+      <details class="collapsibleSection" open style="margin-top:14px;">
+        <summary class="collapsibleSummary">Submit a Field Report</summary>
+        <div class="collapsibleBody">
+          <div style="font-size:12px;color:#94a3b8;margin-bottom:10px;line-height:1.6;">Share what you are seeing on the ground. Your report will appear on the map and in the live feed right away.</div>
+          <div id="rptAddrWrap" style="position:relative;margin-bottom:8px;">
+            <input type="text" id="rptAddr" placeholder="Search an address in Hampton Roads..." autocomplete="off" style="width:100%;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(11,18,32,.9);color:#e2e8f0;font-size:13px;font-family:inherit;"/>
+            <div id="rptAddrDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0d1f3c;border:1px solid rgba(96,165,250,.3);border-radius:10px;z-index:9999;max-height:200px;overflow-y:auto;margin-top:2px;"></div>
+          </div>
+          <button onclick="useMyLocationReport()" style="width:100%;padding:8px 14px;border-radius:10px;border:1px solid rgba(96,165,250,.25);background:rgba(96,165,250,.1);color:#93c5fd;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;">Use my location</button>
+          <div id="rptSelectedAddr" style="display:none;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);border-radius:10px;padding:8px 12px;font-size:12px;color:#6ee7b7;margin-bottom:8px;">Location set to <span id="rptAddrText" style="font-weight:700;"></span></div>
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <select id="rptType" style="flex:1;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(11,18,32,.9);color:#e2e8f0;font-size:13px;font-family:inherit;">
+              <option value="">What kind of incident?</option>
+              <option value="flood">Flooding</option>
+              <option value="surge">Storm surge</option>
+              <option value="wind">Wind damage</option>
+              <option value="power">Power outage</option>
+              <option value="road">Road closed</option>
+              <option value="other">Something else</option>
+            </select>
+            <select id="rptCity" style="flex:1;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(11,18,32,.9);color:#e2e8f0;font-size:13px;font-family:inherit;">
+              <option value="">Which city?</option>
+              <option value="Norfolk">Norfolk</option>
+              <option value="Virginia Beach">Virginia Beach</option>
+              <option value="Chesapeake">Chesapeake</option>
+              <option value="Portsmouth">Portsmouth</option>
+              <option value="Suffolk">Suffolk</option>
+            </select>
+          </div>
+          <textarea id="rptDesc" placeholder="Describe what you are seeing. Water depth, road conditions, any injuries?" style="width:100%;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(11,18,32,.9);color:#e2e8f0;font-size:13px;font-family:inherit;resize:vertical;min-height:70px;margin-bottom:8px;"></textarea>
+          <input type="text" id="rptName" placeholder="Your name (optional)" style="width:100%;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(11,18,32,.9);color:#e2e8f0;font-size:13px;font-family:inherit;margin-bottom:8px;"/>
+          <button onclick="submitLiveDashboardReport()" style="width:100%;padding:10px;border-radius:12px;border:none;background:rgba(248,113,113,.85);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">Submit this report</button>
+          <div id="rptOkMsg" style="display:none;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.28);border-radius:10px;padding:9px 12px;font-size:12px;color:#6ee7b7;font-weight:700;margin-top:6px;">Got it. Your report is on the map and in the feed.</div>
+        </div>
+      </details>
       <div id="orgPanel" style="display:none; margin-top:14px;">
         <div class="row">
           <h3 id="orgName">—</h3>
@@ -1105,12 +1198,8 @@
   function updateMapTheme(isLight) {
     if (mapTileLayer) map.removeLayer(mapTileLayer);
 
-    const url = isLight
-      ? "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      : "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png";
-
-    mapTileLayer = L.tileLayer(url, {
-      attribution: "&copy; CartoDB / OpenStreetMap"
+    mapTileLayer = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap contributors"
     }).addTo(map);
   }
 
@@ -1355,7 +1444,15 @@
       syncResourceFilterInputs();
       refreshFilteredViews();
     }
-    mapElement.scrollIntoView({ behavior: "smooth", block: "start" });
+
+    const mapRect = mapElement.getBoundingClientRect();
+    const currentTop = window.pageYOffset || document.documentElement.scrollTop || 0;
+    const targetTop = currentTop + mapRect.top - Math.max(110, (window.innerHeight - mapRect.height) / 2);
+    window.scrollTo({
+      top: Math.max(0, targetTop),
+      behavior: "smooth"
+    });
+
     map.setView([resource.lat, resource.lon], 13);
     const marker = markerById[resourceId];
     if (marker) {
@@ -1634,7 +1731,205 @@
     loadResources().catch(() => {});
   }, RESOURCE_POLL_MS);
 
+  // LOOKUP: FRONTEND-REPORT-SYSTEM
+  // These functions handle address search, GPS location, report submission
+  // to the Flask API, live feed polling, and purple pin rendering on the map.
+  let rptLat = null;
+  let rptLng = null;
+  let rptGeoTimer = null;
+  const rptTLabels = {flood:"Flooding",surge:"Storm surge",wind:"Wind damage",power:"Power outage",road:"Road closed",other:"Report"};
+  const rptTCls = {flood:"ft-flood",surge:"ft-surge",wind:"ft-wind",power:"ft-power",road:"ft-road",other:"ft-flood"};
+  const reportPinLayer = L.layerGroup().addTo(map);
+
+  function mkReportIcon() {
+    return L.divIcon({
+      className: "",
+      iconSize: [26, 26],
+      iconAnchor: [13, 13],
+      popupAnchor: [0, -15],
+      html: "<div style='width:26px;height:26px;border-radius:50%;background:rgba(192,132,252,0.82);border:2px solid #c084fc;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white;line-height:1;'>!</div>"
+    });
+  }
+
+  function esc(s) {
+    return String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  }
+
+  function fmtShortTime(iso) {
+    const d = new Date(iso);
+    let h = d.getHours();
+    const m = d.getMinutes();
+    const ap = h >= 12 ? "PM" : "AM";
+    h = h % 12 || 12;
+    return h + ":" + String(m).padStart(2, "0") + " " + ap;
+  }
+
+  function renderReportFeed(reports) {
+    const feed = document.getElementById("reportFeed");
+    const count = document.getElementById("reportCount");
+    if (!feed || !count) return;
+
+    count.textContent = reports.length + " report" + (reports.length !== 1 ? "s" : "");
+    feed.innerHTML = reports.map((r) => {
+      const cls = rptTCls[r.type] || "ft-flood";
+      const label = rptTLabels[r.type] || "Report";
+      const time = fmtShortTime(r.submitted_at);
+      const loc = r.city + (r.address ? ", " + r.address : "");
+      return "<div style='background:rgba(255,255,255,.04);border:1px solid rgba(96,165,250,.1);border-radius:10px;padding:9px 11px;'>"
+        + "<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;flex-wrap:wrap;gap:4px;'>"
+        + "<span style='font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;' class='" + cls + "'>" + label + "</span>"
+        + "<span style='font-size:10px;color:#475569;'>" + time + "</span></div>"
+        + "<div style='font-size:12px;color:#cbd5e1;line-height:1.4;'>" + esc(r.description) + "</div>"
+        + "<div style='font-size:11px;color:#60a5fa;margin-top:2px;'>" + esc(loc) + (r.reporter_name ? " - " + esc(r.reporter_name) : "") + "</div>"
+        + "</div>";
+    }).join("");
+  }
+
+  function renderReportPins(reports) {
+    reportPinLayer.clearLayers();
+    reports.forEach((r) => {
+      if (r.lat && r.lon) {
+        L.marker([r.lat, r.lon], { icon: mkReportIcon() })
+          .bindPopup("<b>" + (rptTLabels[r.type] || "Report") + "</b><br>" + esc(r.description) + "<br><small>" + r.city + (r.address ? ", " + r.address : "") + "</small>")
+          .addTo(reportPinLayer);
+      }
+    });
+  }
+
+  async function loadReports() {
+    try {
+      const res = await fetch("/api/reports");
+      if (!res.ok) return;
+      const data = await res.json();
+      const reports = data.reports || [];
+      renderReportFeed(reports);
+      renderReportPins(reports);
+    } catch (e) {
+      console.warn("Report feed unavailable", e);
+    }
+  }
+
+  function useMyLocationReport() {
+    if (!navigator.geolocation) {
+      alert("Geolocation not supported by your browser.");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(function(pos) {
+      rptLat = pos.coords.latitude;
+      rptLng = pos.coords.longitude;
+      map.flyTo([rptLat, rptLng], 15, { duration: 1.2 });
+      fetch("https://nominatim.openstreetmap.org/reverse?format=json&lat=" + rptLat + "&lon=" + rptLng)
+        .then((r) => r.json())
+        .then((d) => {
+          if (d && d.display_name) {
+            document.getElementById("rptAddr").value = d.display_name;
+            document.getElementById("rptAddrText").textContent = d.display_name.split(",").slice(0, 2).join(",");
+            document.getElementById("rptSelectedAddr").style.display = "block";
+          }
+        }).catch(() => {});
+    }, function() {
+      alert("Could not get your location. Please allow location access in your browser settings.");
+    });
+  }
+
+  async function submitLiveDashboardReport() {
+    const type = document.getElementById("rptType").value;
+    const city = document.getElementById("rptCity").value;
+    const desc = document.getElementById("rptDesc").value.trim();
+    const addr = document.getElementById("rptAddr").value.trim();
+    const name = document.getElementById("rptName").value.trim();
+    if (!type || !city || !desc) {
+      alert("Please pick an incident type, a city, and describe what you are seeing.");
+      return;
+    }
+
+    try {
+      const res = await fetch("/api/reports", {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({type, city, address: addr, description: desc, reporter_name: name, lat: rptLat, lon: rptLng})
+      });
+      if (!res.ok) {
+        alert("Could not save your report right now. Please try again.");
+        return;
+      }
+
+      const data = await res.json();
+      const reports = data.reports || [];
+      renderReportFeed(reports);
+      renderReportPins(reports);
+      document.getElementById("rptType").value = "";
+      document.getElementById("rptCity").value = "";
+      document.getElementById("rptDesc").value = "";
+      document.getElementById("rptName").value = "";
+      document.getElementById("rptAddr").value = "";
+      document.getElementById("rptSelectedAddr").style.display = "none";
+      document.getElementById("rptAddrText").textContent = "";
+      rptLat = null;
+      rptLng = null;
+      const ok = document.getElementById("rptOkMsg");
+      ok.style.display = "block";
+      setTimeout(() => { ok.style.display = "none"; }, 4000);
+    } catch (e) {
+      alert("Something went wrong. Please try again.");
+    }
+  }
+
+  const rptInp = document.getElementById("rptAddr");
+  const rptDrop = document.getElementById("rptAddrDrop");
+  if (rptInp && rptDrop) {
+    rptInp.addEventListener("input", function() {
+      const val = rptInp.value.trim();
+      rptDrop.style.display = "none";
+      rptDrop.innerHTML = "";
+      if (val.length < 3) return;
+      clearTimeout(rptGeoTimer);
+      rptDrop.innerHTML = "<div style='padding:9px 12px;font-size:12px;color:#64748b;'>Searching...</div>";
+      rptDrop.style.display = "block";
+      rptGeoTimer = setTimeout(function() {
+        fetch("https://nominatim.openstreetmap.org/search?format=json&q=" + encodeURIComponent(val + " Virginia") + "&limit=8&countrycodes=us&viewbox=-77.0,36.4,-75.7,37.2&bounded=0")
+          .then(function(r) { return r.json(); })
+          .then(function(results) {
+            rptDrop.innerHTML = "";
+            if (!results || !results.length) {
+              rptDrop.innerHTML = "<div style='padding:9px 12px;font-size:12px;color:#64748b;'>No results found</div>";
+              return;
+            }
+            results.forEach(function(r) {
+              const d = document.createElement("div");
+              d.style.cssText = "padding:9px 12px;font-size:12px;color:#e2e8f0;cursor:pointer;border-bottom:1px solid rgba(96,165,250,.08);";
+              d.textContent = r.display_name;
+              d.onmouseenter = function() { d.style.background = "rgba(96,165,250,.14)"; };
+              d.onmouseleave = function() { d.style.background = ""; };
+              d.onclick = function() {
+                rptInp.value = r.display_name;
+                rptLat = parseFloat(r.lat);
+                rptLng = parseFloat(r.lon);
+                rptDrop.style.display = "none";
+                const short = r.display_name.split(",").slice(0, 2).join(",");
+                document.getElementById("rptAddrText").textContent = short;
+                document.getElementById("rptSelectedAddr").style.display = "block";
+                map.flyTo([rptLat, rptLng], 15, { duration: 1.2 });
+              };
+              rptDrop.appendChild(d);
+            });
+          }).catch(function() {
+            rptDrop.style.display = "none";
+          });
+      }, 400);
+    });
+
+    document.addEventListener("click", function(e) {
+      if (!rptInp.contains(e.target) && !rptDrop.contains(e.target)) rptDrop.style.display = "none";
+    });
+  }
+
+  loadReports();
+  window.setInterval(loadReports, 5000);
+
 </script>
 
 </body>
 </html>
+
