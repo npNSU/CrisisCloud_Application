@@ -852,6 +852,9 @@
   Weather: —
 </div>
 
+      <!-- LOOKUP: FRONTEND-REPORT-FEED
+           This live dashboard feed shows the most recent field reports so viewers
+           can monitor reported hazards without opening the sidebar form. -->
       <div class="mutedBox" id="reportFeedBox" style="margin-top:10px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
           <span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;">Live Field Reports</span>
@@ -868,6 +871,9 @@
         <div class="forecastCard">Forecast loading...</div>
       </div>
 
+      <!-- LOOKUP: FRONTEND-HELP-RESOURCES
+           This section gives users recovery-oriented links for insurance,
+           FEMA, Red Cross, outages, evacuation zones, and other post-storm support. -->
       <div class="weatherTitle">Home And Auto Insurance Help</div>
       <div class="insuranceGrid">
         <div class="insuranceCard">
@@ -952,6 +958,9 @@
         <button class="primary" style="margin-top:15px;" id="btnOpenLogin">Login to Update Status</button>
       </div>
 
+      <!-- LOOKUP: FRONTEND-FILTER-PANEL
+           This panel lets users combine resource types so the map and directories
+           only show the categories they need during a response scenario. -->
       <details class="filterPanel" open>
         <summary class="filterPanelSummary">
           <span>Resource Filters</span>
@@ -1050,6 +1059,9 @@
         </div>
       </details>
 
+      <!-- LOOKUP: FRONTEND-REPORT-FORM
+           This sidebar form lets users submit live field reports that are saved
+           through the backend and then shown in the live dashboard feed and on the map. -->
       <details class="collapsibleSection" open style="margin-top:14px;">
         <summary class="collapsibleSummary">Submit a Field Report</summary>
         <div class="collapsibleBody">
@@ -1163,6 +1175,13 @@
   const shelterDirectory = document.getElementById("shelterDirectory");
   const foodDirectory = document.getElementById("foodDirectory");
   const boldTextToggle = document.getElementById("boldTextToggle");
+  const reportSectionFields = [
+    document.getElementById("rptAddr"),
+    document.getElementById("rptType"),
+    document.getElementById("rptCity"),
+    document.getElementById("rptDesc"),
+    document.getElementById("rptName")
+  ];
   let mapTileLayer;
   let markerById = {};
   const resourceIcons = {
@@ -1202,11 +1221,11 @@
       attribution: "&copy; OpenStreetMap contributors"
     }).addTo(map);
   }
-//fixed map code in dark mode
- themeCheckbox.addEventListener("change", () => {
+
+  themeCheckbox.addEventListener("change", () => {
     const isLight = themeCheckbox.checked;
     document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
-    updateMapTheme(true);
+    updateMapTheme(isLight);
     localStorage.setItem("crisisTheme", isLight ? "light" : "dark");
   });
 
@@ -1226,8 +1245,7 @@
   }
 
   const map = L.map("map").setView([36.9, -76.3], 10);
-  updateMapTheme(true);
-//end of fixes
+  updateMapTheme(savedTheme === "light");
 
   // LOOKUP: FRONTEND-MAP-LAYERS
   // These Leaflet layers separate persistent resource markers from temporary
@@ -1313,6 +1331,43 @@
 
   function toggleDirectorySection(sectionElement, shouldShow) {
     sectionElement.classList.toggle("is-hidden", !shouldShow);
+  }
+
+  // LOOKUP: FRONTEND-POLL-GUARD
+  // Background polling pauses while someone is actively editing organization
+  // controls or drafting a live field report so their in-progress changes are
+  // not reset by an automatic re-render from fresh API data.
+  function isInteractingWithLiveReport() {
+    const activeElement = document.activeElement;
+    return reportSectionFields.some((field) => field && (field === activeElement || String(field.value || "").trim() !== ""));
+  }
+
+  function isInteractingWithOrgPanel() {
+    if (orgPanel.style.display === "none" || !loggedInResourceId) return false;
+
+    const activeElement = document.activeElement;
+    if (activeElement && orgPanel.contains(activeElement)) {
+      return true;
+    }
+
+    const resource = resources.find((item) => item.id === loggedInResourceId);
+    if (!resource) return false;
+
+    const meta = resourceMeta[resource.type];
+    const orgStatus = document.getElementById("orgStatus");
+    const orgCountValue = document.getElementById("orgCountValue");
+    const orgPhone = document.getElementById("orgPhone");
+    if (!meta || !orgStatus || !orgCountValue || !orgPhone) return false;
+
+    return (
+      orgStatus.value !== String(resource.status || "") ||
+      orgPhone.value !== String(resource.phone || "") ||
+      String(orgCountValue.value) !== String(resource[meta.countField] ?? 0)
+    );
+  }
+
+  function shouldPauseAutoRefresh() {
+    return isInteractingWithOrgPanel() || isInteractingWithLiveReport();
   }
 
   function updateDashboardSummary() {
@@ -1729,6 +1784,7 @@
 
   refreshWeatherForMapCenter();
   window.setInterval(() => {
+    if (shouldPauseAutoRefresh()) return;
     loadResources().catch(() => {});
   }, RESOURCE_POLL_MS);
 
@@ -1927,10 +1983,12 @@
   }
 
   loadReports();
-  window.setInterval(loadReports, 5000);
+  window.setInterval(() => {
+    if (shouldPauseAutoRefresh()) return;
+    loadReports();
+  }, 5000);
 
 </script>
 
 </body>
 </html>
-
