@@ -786,7 +786,6 @@
           <span>Bold Details</span>
         </label>
       </div>
-      <button class="ghost" id="btnAskLocation">Share Location</button>
       <button class="ghost" id="btnHamptonRoads">Center Map</button>
       <button class="ghost" id="btnLogin">Org Login</button>
     </div>
@@ -855,6 +854,41 @@
   Weather: —
 </div>
 
+      <details class="collapsibleSection" style="margin-top:10px;">
+        <summary class="collapsibleSummary">Submit a Field Report</summary>
+        <div class="collapsibleBody">
+          <div style="font-size:12px;color:#94a3b8;margin-bottom:10px;line-height:1.6;">Share what you are seeing on the ground. Your report will appear on the map and in the live feed right away.</div>
+          <div id="rptAddrWrap" style="position:relative;margin-bottom:8px;">
+            <input type="text" id="rptAddr" placeholder="Search an address in Hampton Roads..." autocomplete="off" style="width:100%;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(11,18,32,.9);color:#e2e8f0;font-size:13px;font-family:inherit;"/>
+            <div id="rptAddrDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0d1f3c;border:1px solid rgba(96,165,250,.3);border-radius:10px;z-index:9999;max-height:200px;overflow-y:auto;margin-top:2px;"></div>
+          </div>
+          <button onclick="useMyLocationReport()" style="width:100%;padding:8px 14px;border-radius:10px;border:1px solid rgba(96,165,250,.25);background:rgba(96,165,250,.1);color:#93c5fd;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;">Use my location</button>
+          <div id="rptSelectedAddr" style="display:none;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);border-radius:10px;padding:8px 12px;font-size:12px;color:#6ee7b7;margin-bottom:8px;">Location set to <span id="rptAddrText" style="font-weight:700;"></span></div>
+          <div style="display:flex;gap:8px;margin-bottom:8px;">
+            <select id="rptType" style="flex:1;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(11,18,32,.9);color:#e2e8f0;font-size:13px;font-family:inherit;">
+              <option value="">What kind of incident?</option>
+              <option value="flood">Flooding</option>
+              <option value="surge">Storm surge</option>
+              <option value="wind">Wind damage</option>
+              <option value="power">Power outage</option>
+              <option value="road">Road closed</option>
+              <option value="other">Something else</option>
+            </select>
+            <select id="rptCity" style="flex:1;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(11,18,32,.9);color:#e2e8f0;font-size:13px;font-family:inherit;">
+              <option value="">Which city?</option>
+              <option value="Norfolk">Norfolk</option>
+              <option value="Virginia Beach">Virginia Beach</option>
+              <option value="Chesapeake">Chesapeake</option>
+              <option value="Portsmouth">Portsmouth</option>
+              <option value="Suffolk">Suffolk</option>
+            </select>
+          </div>
+          <textarea id="rptDesc" placeholder="Describe what you are seeing. Water depth, road conditions, any injuries?" style="width:100%;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(11,18,32,.9);color:#e2e8f0;font-size:13px;font-family:inherit;resize:vertical;min-height:70px;margin-bottom:8px;"></textarea>
+          <input type="text" id="rptName" placeholder="Your name (optional)" style="width:100%;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(11,18,32,.9);color:#e2e8f0;font-size:13px;font-family:inherit;margin-bottom:8px;"/>
+          <button onclick="submitLiveDashboardReport()" style="width:100%;padding:10px;border-radius:12px;border:none;background:rgba(248,113,113,.85);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">Submit this report</button>
+          <div id="rptOkMsg" style="display:none;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.28);border-radius:10px;padding:9px 12px;font-size:12px;color:#6ee7b7;font-weight:700;margin-top:6px;">Got it. Your report is on the map and in the feed.</div>
+        </div>
+      </details>
       <div class="mutedBox" id="reportFeedBox" style="margin-top:10px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
           <span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;">Live Field Reports</span>
@@ -862,6 +896,7 @@
         </div>
         <div id="reportFeed" style="display:flex;flex-direction:column;gap:8px;max-height:220px;overflow-y:auto;"></div>
       </div>
+
 <div class="mutedBox" id="alertsBox" style="margin-top:10px;">
   Alerts: —
 </div>
@@ -1053,42 +1088,7 @@
           </div>
         </div>
       </details>
-
-      <details class="collapsibleSection" open style="margin-top:14px;">
-        <summary class="collapsibleSummary">Submit a Field Report</summary>
-        <div class="collapsibleBody">
-          <div style="font-size:12px;color:#94a3b8;margin-bottom:10px;line-height:1.6;">Share what you are seeing on the ground. Your report will appear on the map and in the live feed right away.</div>
-          <div id="rptAddrWrap" style="position:relative;margin-bottom:8px;">
-            <input type="text" id="rptAddr" placeholder="Search an address in Hampton Roads..." autocomplete="off" style="width:100%;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(11,18,32,.9);color:#e2e8f0;font-size:13px;font-family:inherit;"/>
-            <div id="rptAddrDrop" style="display:none;position:absolute;top:100%;left:0;right:0;background:#0d1f3c;border:1px solid rgba(96,165,250,.3);border-radius:10px;z-index:9999;max-height:200px;overflow-y:auto;margin-top:2px;"></div>
-          </div>
-          <button onclick="useMyLocationReport()" style="width:100%;padding:8px 14px;border-radius:10px;border:1px solid rgba(96,165,250,.25);background:rgba(96,165,250,.1);color:#93c5fd;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;margin-bottom:8px;">Use my location</button>
-          <div id="rptSelectedAddr" style="display:none;background:rgba(52,211,153,.08);border:1px solid rgba(52,211,153,.25);border-radius:10px;padding:8px 12px;font-size:12px;color:#6ee7b7;margin-bottom:8px;">Location set to <span id="rptAddrText" style="font-weight:700;"></span></div>
-          <div style="display:flex;gap:8px;margin-bottom:8px;">
-            <select id="rptType" style="flex:1;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(11,18,32,.9);color:#e2e8f0;font-size:13px;font-family:inherit;">
-              <option value="">What kind of incident?</option>
-              <option value="flood">Flooding</option>
-              <option value="surge">Storm surge</option>
-              <option value="wind">Wind damage</option>
-              <option value="power">Power outage</option>
-              <option value="road">Road closed</option>
-              <option value="other">Something else</option>
-            </select>
-            <select id="rptCity" style="flex:1;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(11,18,32,.9);color:#e2e8f0;font-size:13px;font-family:inherit;">
-              <option value="">Which city?</option>
-              <option value="Norfolk">Norfolk</option>
-              <option value="Virginia Beach">Virginia Beach</option>
-              <option value="Chesapeake">Chesapeake</option>
-              <option value="Portsmouth">Portsmouth</option>
-              <option value="Suffolk">Suffolk</option>
-            </select>
-          </div>
-          <textarea id="rptDesc" placeholder="Describe what you are seeing. Water depth, road conditions, any injuries?" style="width:100%;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(11,18,32,.9);color:#e2e8f0;font-size:13px;font-family:inherit;resize:vertical;min-height:70px;margin-bottom:8px;"></textarea>
-          <input type="text" id="rptName" placeholder="Your name (optional)" style="width:100%;padding:8px 10px;border-radius:10px;border:1px solid rgba(96,165,250,.2);background:rgba(11,18,32,.9);color:#e2e8f0;font-size:13px;font-family:inherit;margin-bottom:8px;"/>
-          <button onclick="submitLiveDashboardReport()" style="width:100%;padding:10px;border-radius:12px;border:none;background:rgba(248,113,113,.85);color:#fff;font-size:13px;font-weight:800;cursor:pointer;font-family:inherit;">Submit this report</button>
-          <div id="rptOkMsg" style="display:none;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.28);border-radius:10px;padding:9px 12px;font-size:12px;color:#6ee7b7;font-weight:700;margin-top:6px;">Got it. Your report is on the map and in the feed.</div>
-        </div>
-      </details>      <div id="orgPanel" style="display:none; margin-top:14px;">
+      <div id="orgPanel" style="display:none; margin-top:14px;">
         <div class="row">
           <h3 id="orgName">—</h3>
           <button class="danger" id="btnLogout">Log out</button>
