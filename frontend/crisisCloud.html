@@ -1202,11 +1202,11 @@
       attribution: "&copy; OpenStreetMap contributors"
     }).addTo(map);
   }
-
-  themeCheckbox.addEventListener("change", () => {
+//fixed map code in dark mode
+ themeCheckbox.addEventListener("change", () => {
     const isLight = themeCheckbox.checked;
     document.documentElement.setAttribute("data-theme", isLight ? "light" : "dark");
-    updateMapTheme(isLight);
+    updateMapTheme(true);
     localStorage.setItem("crisisTheme", isLight ? "light" : "dark");
   });
 
@@ -1226,7 +1226,8 @@
   }
 
   const map = L.map("map").setView([36.9, -76.3], 10);
-  updateMapTheme(savedTheme === "light");
+  updateMapTheme(true);
+//end of fixes
 
   // LOOKUP: FRONTEND-MAP-LAYERS
   // These Leaflet layers separate persistent resource markers from temporary
