@@ -158,6 +158,11 @@
   <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
     <div class="logo">CrisisCloud</div>
     <div style="font-size:11px;color:#94a3b8;">Hampton Roads Emergency Operations</div>
+    <div class="live-pill"><div class="sdot"></div>LIVE</div>
+  </div>
+  <div>
+    <div class="clock-date" id="liveDate"></div>
+    <div class="clock-time" id="liveTime"></div>
   </div>
 </div>
 
@@ -209,7 +214,7 @@
       This is a real interactive map centered on Hampton Roads. You can <strong>drag it around, pinch or scroll to zoom in and out, and tap any marker to see what is going on at that location</strong>. Use the city filter to narrow down what you see, or tap Use my location to center the map on where you are right now.
     </div>
     <div class="callout">
-      The S markers are open shelters. The F markers show active flooding zones reported during Irene. The red triangles are incidents like downed trees and road closures. Tap any of them for more details.
+      The shelter icons show open emergency shelters. Green ring means open, yellow means limited. The flood icons mark active flooding zones reported during Irene. The incident icons mark downed trees, road closures, and other hazards. Tap any marker for more details.
     </div>
     <div class="map-toolbar">
       <select onchange="filterCity('s1Map',this.value)">
@@ -525,21 +530,21 @@ var incidents=[
 ];
 
 function mkS(status){
-  var c=status==='open'?'#34d399':'#fbbf24';
-  return L.divIcon({className:'',iconSize:[28,28],iconAnchor:[14,14],popupAnchor:[0,-16],
-    html:'<div style="width:28px;height:28px;border-radius:50%;background:#1d4ed8;border:2.5px solid '+c+';display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;color:white;line-height:1;">S</div>'});
+  var ring=status==='open'?'2px solid #34d399':'2px solid #fbbf24';
+  return L.divIcon({className:'',iconSize:[32,32],iconAnchor:[16,16],popupAnchor:[0,-18],
+    html:'<div style="width:32px;height:32px;border-radius:50%;background:rgba(15,23,42,0.85);border:'+ring+';display:flex;align-items:center;justify-content:center;"><img src="/static/icons/shelter.png" style="width:20px;height:20px;object-fit:contain;"></div>'});
 }
 function mkF(){
-  return L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,13],popupAnchor:[0,-15],
-    html:'<div style="width:26px;height:26px;border-radius:50%;background:#1e3a8a;border:2px solid #60a5fa;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;color:white;line-height:1;">F</div>'});
+  return L.divIcon({className:'',iconSize:[32,32],iconAnchor:[16,16],popupAnchor:[0,-18],
+    html:'<div style="width:32px;height:32px;border-radius:50%;background:rgba(15,23,42,0.85);border:2px solid #60a5fa;display:flex;align-items:center;justify-content:center;"><img src="/static/icons/flood.png" style="width:20px;height:20px;object-fit:contain;"></div>'});
 }
 function mkI(){
-  return L.divIcon({className:'',iconSize:[26,24],iconAnchor:[13,12],popupAnchor:[0,-14],
-    html:'<div style="width:0;height:0;border-left:13px solid transparent;border-right:13px solid transparent;border-bottom:24px solid #dc2626;"></div>'});
+  return L.divIcon({className:'',iconSize:[32,32],iconAnchor:[16,16],popupAnchor:[0,-18],
+    html:'<div style="width:32px;height:32px;border-radius:50%;background:rgba(15,23,42,0.85);border:2px solid #f87171;display:flex;align-items:center;justify-content:center;"><img src="/static/icons/incident.png" style="width:20px;height:20px;object-fit:contain;"></div>'});
 }
 function mkU(){
-  return L.divIcon({className:'',iconSize:[26,26],iconAnchor:[13,13],popupAnchor:[0,-15],
-    html:'<div style="width:26px;height:26px;border-radius:50%;background:rgba(192,132,252,0.82);border:2px solid #c084fc;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:white;line-height:1;">!</div>'});
+  return L.divIcon({className:'',iconSize:[32,32],iconAnchor:[16,16],popupAnchor:[0,-18],
+    html:'<div style="width:32px;height:32px;border-radius:50%;background:rgba(192,132,252,0.85);border:2px solid #c084fc;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:800;color:white;">!</div>'});
 }
 
 var HR_BOUNDS={left:-77.0,right:-75.7,bottom:36.4,top:37.2};
