@@ -1107,6 +1107,7 @@
         </div>
         <div class="mutedBox" id="orgControls"></div>
         <button class="primary" id="btnSaveOrgUpdate" style="width:100%; margin-top:10px;">Save Update</button>
+        <div id="orgUpdateMessage" style="display:none; margin-top:8px; font-size:12px; font-weight:700; color:#22c55e;">Update complete.</div>
       </div>
     </aside>
   </div>
@@ -1155,6 +1156,7 @@
   const orgPanel = document.getElementById("orgPanel");
   const orgName = document.getElementById("orgName");
   const orgControls = document.getElementById("orgControls");
+  const orgUpdateMessage = document.getElementById("orgUpdateMessage");
   const locStatus = document.getElementById("locStatus");
   const weatherBox = document.getElementById("weatherBox");
   const alertsBox = document.getElementById("alertsBox");
@@ -1452,6 +1454,7 @@
     const resource = resources.find((item) => item.id === loggedInResourceId);
     if (!resource) return;
 
+    orgUpdateMessage.style.display = "none";
     orgName.textContent = resource.name;
     const meta = resourceMeta[resource.type];
     const statusOptions = meta.statusOptions;
@@ -1474,10 +1477,38 @@
     `;
   }
 
+  // LOOKUP: FRONTEND-AUTO-REFRESH-GUARD
+  // This helper pauses background polling while an organization user is editing
+  // the update form so the shared refresh cannot reset the menu back to the
+  // last saved values before the user clicks Save Update.
+  function isEditingOrgUpdate() {
+    if (!loggedInResourceId || orgPanel.style.display === "none") return false;
+
+    const resource = resources.find((item) => item.id === loggedInResourceId);
+    if (!resource) return false;
+
+    const statusInput = document.getElementById("orgStatus");
+    const countInput = document.getElementById("orgCountValue");
+    const phoneInput = document.getElementById("orgPhone");
+    const activeElement = document.activeElement;
+
+    if (!statusInput || !countInput || !phoneInput) return false;
+
+    const meta = resourceMeta[resource.type];
+    const currentCount = String(resource[meta.countField] ?? 0);
+    const currentPhone = resource.phone || "";
+    const hasDraftChanges =
+      statusInput.value !== resource.status ||
+      countInput.value !== currentCount ||
+      phoneInput.value !== currentPhone;
+
+    return hasDraftChanges || orgControls.contains(activeElement);
+  }
+
   // LOOKUP: FRONTEND-RESOURCE-FETCH
   // This fetch pulls the latest shared resource data from Flask, then refreshes
   // the login dropdown, sidebar directories, map markers, and org panel state.
-  async function loadResources() {
+  async function loadResources({ preserveOrgDraft = false } = {}) {
     const res = await fetch("/api/resources");
     if (!res.ok) throw new Error("Unable to load resources");
 
@@ -1485,7 +1516,11 @@
     resources = data.resources || [];
     refreshFilteredViews();
 
-    if (loggedInResourceId && resources.some((item) => item.id === loggedInResourceId)) {
+    if (
+      loggedInResourceId &&
+      resources.some((item) => item.id === loggedInResourceId) &&
+      !(preserveOrgDraft && isEditingOrgUpdate())
+    ) {
       renderOrgControls();
     }
   }
@@ -1552,6 +1587,7 @@
     loggedInResourceId = null;
     orgLoggedOut.style.display = "block";
     orgPanel.style.display = "none";
+    orgUpdateMessage.style.display = "none";
   };
 
   // LOOKUP: FRONTEND-SESSION-RESTORE
@@ -1607,6 +1643,10 @@
     resources = data.resources || resources;
     refreshFilteredViews();
     renderOrgControls();
+    orgUpdateMessage.style.display = "block";
+    window.setTimeout(() => {
+      orgUpdateMessage.style.display = "none";
+    }, 2500);
   };
 
   // LOOKUP: FRONTEND-INCIDENT-DEMOS
@@ -1776,7 +1816,8 @@
   refreshWeatherForMapCenter();
   window.setInterval(refreshWeatherForMapCenter, 60000);
   window.setInterval(() => {
-    loadResources().catch(() => {});
+    if (isEditingOrgUpdate()) return;
+    loadResources({ preserveOrgDraft: true }).catch(() => {});
   }, RESOURCE_POLL_MS);
 
 
