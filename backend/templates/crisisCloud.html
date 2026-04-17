@@ -754,7 +754,7 @@
      This header contains the app title, theme switch, map recenter button,
      and org login shortcut used throughout the demo. -->
 <header>
-<div style="background:#060e1c;border-bottom:1px solid rgba(96,165,250,.18);padding:0 18px;display:flex;align-items:center;flex-wrap:wrap;"><span style="font-size:16px;font-weight:800;color:#f8fafc;padding:12px 16px 12px 0;border-right:1px solid rgba(96,165,250,.12);margin-right:4px;">CrisisCloud</span><a href="/" style="display:inline-block;padding:12px 15px;font-size:13px;font-weight:700;color:#60a5fa;text-decoration:none;border-bottom:3px solid #60a5fa;">Live Dashboard</a><a href="/simulation" style="display:inline-block;padding:12px 15px;font-size:13px;font-weight:700;color:#94a3b8;text-decoration:none;border-bottom:3px solid transparent;">Hurricane Simulation</a></div>
+<div style="background:#060e1c;border-bottom:1px solid rgba(96,165,250,.18);padding:0 18px;display:flex;align-items:center;flex-wrap:wrap;"><span style="font-size:16px;font-weight:800;color:#f8fafc;padding:12px 16px 12px 0;border-right:1px solid rgba(96,165,250,.12);margin-right:4px;">CrisisCloud</span><a href="/" style="display:inline-block;padding:12px 15px;font-size:13px;font-weight:700;color:#60a5fa;text-decoration:none;border-bottom:3px solid #60a5fa;">Live Dashboard</a><a href="/simulation" style="display:inline-block;padding:12px 15px;font-size:13px;font-weight:700;color:#94a3b8;text-decoration:none;border-bottom:3px solid transparent;">Hurricane Simulation</a><div style="margin-left:auto;display:flex;align-items:center;gap:10px;padding:0 8px;"><div style="text-align:right;"><div id="dashDate" style="font-size:11px;color:#fbbf24;font-weight:800;"></div><div id="dashTime" style="font-size:16px;font-weight:800;color:#f8fafc;font-variant-numeric:tabular-nums;"></div></div><div style="display:flex;align-items:center;gap:5px;background:rgba(248,113,113,.14);border:1px solid rgba(248,113,113,.3);border-radius:999px;padding:4px 10px;font-size:11px;font-weight:800;color:#fca5a5;"><div style="width:7px;height:7px;border-radius:50%;background:#f87171;animation:blink 1.2s infinite;"></div>LIVE</div></div></div>
   <div class="row">
     <div class="brandBlock">
       <div class="eyebrow">Hampton Roads Crisis Dashboard</div>
@@ -1877,7 +1877,20 @@
       if (!rptInp.contains(e.target) && !rptDrop.contains(e.target)) rptDrop.style.display = "none";
     });
   }  loadReports();
-  window.setInterval(loadReports, 5000);</script>
+  window.setInterval(loadReports, 5000);
+
+  function updateDashClock() {
+    const now = new Date();
+    const opts = {timeZone:"America/New_York"};
+    const date = now.toLocaleDateString("en-US", {...opts, weekday:"long", month:"long", day:"numeric", year:"numeric"});
+    const time = now.toLocaleTimeString("en-US", {...opts, hour:"numeric", minute:"2-digit", second:"2-digit"});
+    const el = document.getElementById("dashDate");
+    const tl = document.getElementById("dashTime");
+    if(el) el.textContent = date;
+    if(tl) tl.textContent = time + " EST";
+  }
+  updateDashClock();
+  window.setInterval(updateDashClock, 1000);</script>
 
 </body>
 </html>
