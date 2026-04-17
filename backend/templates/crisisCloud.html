@@ -854,6 +854,9 @@
   Weather: —
 </div>
 
+      <!-- LOOKUP: FRONTEND-REPORT-FORM
+           This inline report form lets a user submit live field incidents directly
+           from the dashboard so they appear in the feed and on the map. -->
       <details class="collapsibleSection" style="margin-top:10px;">
         <summary class="collapsibleSummary">Submit a Field Report</summary>
         <div class="collapsibleBody">
@@ -889,6 +892,9 @@
           <div id="rptOkMsg" style="display:none;background:rgba(52,211,153,.12);border:1px solid rgba(52,211,153,.28);border-radius:10px;padding:9px 12px;font-size:12px;color:#6ee7b7;font-weight:700;margin-top:6px;">Got it. Your report is on the map and in the feed.</div>
         </div>
       </details>
+      <!-- LOOKUP: FRONTEND-REPORT-FEED
+           This compact live dashboard feed shows the newest reported incidents
+           without leaving the main public dashboard view. -->
       <div class="mutedBox" id="reportFeedBox" style="margin-top:10px;">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
           <span style="font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:#94a3b8;">Live Field Reports</span>
@@ -906,6 +912,9 @@
         <div class="forecastCard">Forecast loading...</div>
       </div>
 
+      <!-- LOOKUP: FRONTEND-HELP-RESOURCES
+           These support links give users insurance, FEMA, Red Cross, and recovery
+           resources they may need during or after severe weather. -->
       <div class="weatherTitle">Home And Auto Insurance Help</div>
       <div class="insuranceGrid">
         <div class="insuranceCard">
@@ -991,6 +1000,9 @@
         <button class="primary" style="margin-top:15px;" id="btnOpenLogin">Login to Update Status</button>
       </div>
 
+      <!-- LOOKUP: FRONTEND-FILTER-PANEL
+           This filter panel controls which resource categories stay visible on the
+           map and in the sidebar directories during a live demo. -->
       <details class="filterPanel" open>
         <summary class="filterPanelSummary">
           <span>Resource Filters</span>
@@ -1542,6 +1554,9 @@
     orgPanel.style.display = "none";
   };
 
+  // LOOKUP: FRONTEND-SESSION-RESTORE
+  // This helper reuses a saved login token so the dashboard can reopen the
+  // organization update controls without making the user log in again.
   async function checkExistingSession() {
     const token = localStorage.getItem("cc_token");
     if (!token) return;
@@ -1561,7 +1576,9 @@
       renderOrgControls();
     } catch(e) {}
   }
-  checkExistingSession();  // LOOKUP: FRONTEND-ORG-SAVE
+  checkExistingSession();
+
+  // LOOKUP: FRONTEND-ORG-SAVE
   // Saving an org update sends the edited status, contact number, and capacity
   // back to the Flask backend so every open dashboard sees the shared changes.
   document.getElementById("btnSaveOrgUpdate").onclick = async () => {
@@ -1930,6 +1947,9 @@
   }  loadReports();
   window.setInterval(loadReports, 5000);
 
+  // LOOKUP: FRONTEND-DASH-CLOCK
+  // This clock keeps the dashboard date and time current in Eastern Time so the
+  // public view feels live during a presentation or class demo.
   function updateDashClock() {
     const now = new Date();
     const opts = {timeZone:"America/New_York"};
