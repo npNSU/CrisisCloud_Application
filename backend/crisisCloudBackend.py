@@ -27,6 +27,11 @@ NWS_UA = os.getenv("NWS_USER_AGENT", "CrisisCloud/1.0 (demo@example.com)")
 if not DATABASE_URL:
     raise RuntimeError("DATABASE_URL is required in the .env file.")
 
+# LOOKUP: BACKEND-SUPABASE-CONNECTION
+# This app uses the Supabase-hosted Postgres database referenced by DATABASE_URL.
+# The Flask app serves frontend templates and local icon assets while reading and
+# writing shared crisis data through that one hosted connection string.
+
 # LOOKUP: BACKEND-RESOURCE-DATA
 # Resource records now live in the hosted Postgres database configured by
 # DATABASE_URL. Keeping the source of truth in one place lets every browser and
@@ -91,7 +96,8 @@ RESOURCE_COUNT_FIELDS = {
 
 # LOOKUP: BACKEND-DATABASE-SETUP
 # Supabase provides the hosted Postgres database. This startup check ensures the
-# expected table exists so the app fails early with a clear error if the schema is
+# expected tables exist so the app fails early with a clear error if the schema is
+# missing or the connection string is invalid.
 def init_db():
     with get_db_connection() as conn:
         with conn.cursor() as cur:
@@ -394,6 +400,9 @@ def weather_live():
 
 
 # LOOKUP: BACKEND-REPORTS-API
+# These endpoints power the live field reporting workflow. The GET route returns
+# the latest submitted reports for the dashboard feed, and the POST route saves
+# a new report so it can appear on the map and in the live alert list.
 @app.get("/api/reports")
 def get_reports():
     try:
@@ -547,7 +556,9 @@ def register():
     except Exception as e:
         if "unique" in str(e).lower():
             return jsonify({"error": "Username already taken"}), 409
-        return jsonify({"error": str(e)}), 500# LOOKUP: BACKEND-APP-START
+        return jsonify({"error": str(e)}), 500
+
+# LOOKUP: BACKEND-APP-START
 # Running this file directly starts the Flask development server. This is the entry
 # point teammates use from the terminal during local development and demo prep.
 init_db()
@@ -555,4 +566,3 @@ init_db()
 
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
-
