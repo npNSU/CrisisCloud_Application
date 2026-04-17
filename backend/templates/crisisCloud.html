@@ -237,9 +237,10 @@
     .grid {
       display: grid;
       grid-template-columns: minmax(0, 1.18fr) minmax(320px, 0.82fr);
+      align-items: start;
       gap: 18px;
     }
-    @media (max-width: 980px) { .grid { grid-template-columns: 1fr; } }
+    @media (max-width: 700px) { .grid { grid-template-columns: 1fr; } }
 
     .card {
       background: var(--bg-card);
@@ -463,7 +464,7 @@
        present weather, contacts, and resource details next to the map. */
     .forecastGrid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(140px, 200px));
       gap: 12px;
       margin-top: 12px;
     }
@@ -624,7 +625,7 @@
     }
     .statRow {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      grid-template-columns: repeat(auto-fill, minmax(140px, 200px));
       gap: 10px;
     }
     .statChip {
@@ -745,7 +746,20 @@
       display: none !important;
     }
     body.modal-open #map { filter: blur(2px); opacity: 0.6; }
-  @keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}  </style>
+    .ft-flood,
+    .ft-surge,
+    .ft-wind,
+    .ft-power,
+    .ft-road {
+      color: #f8fafc;
+    }
+    .ft-flood { background: rgba(59, 130, 246, 0.7); }
+    .ft-surge { background: rgba(168, 85, 247, 0.7); }
+    .ft-wind { background: rgba(14, 165, 233, 0.7); }
+    .ft-power { background: rgba(245, 158, 11, 0.78); }
+    .ft-road { background: rgba(239, 68, 68, 0.76); }
+  @keyframes blink{0%,100%{opacity:1;}50%{opacity:.2;}}
+  </style>
 </head>
 
 <body>
@@ -784,7 +798,7 @@
     <!-- LOOKUP: FRONTEND-PUBLIC-DASHBOARD
          This section contains the public-facing map, legend, filters, incident
          demo controls, and weather panels that update based on the current map center. -->
-    <section class="card">
+    <section class="card" style="align-self:start;">
       <div class="dashboardHero">
         <span class="heroKicker">Public Dashboard</span>
         <div class="heroTitle">Regional emergency visibility in one place</div>
@@ -888,6 +902,46 @@
           <div class="insuranceName">Liberty Mutual</div>
           <div class="insuranceNote">Flexible home coverage options with disaster-specific add-ons.</div>
           <a class="insuranceLink" href="https://www.libertymutual.com" target="_blank" rel="noopener noreferrer">Visit Liberty Mutual</a>
+        </div>
+
+      </div>
+
+      <div class="weatherTitle">Recovery Resources</div>
+      <div class="insuranceGrid">
+        <div class="insuranceCard">
+          <div class="insuranceName">FEMA Disaster Assistance</div>
+          <div class="insuranceNote">Apply for federal disaster recovery assistance after major storm damage.</div>
+          <a class="insuranceLink" href="https://www.disasterassistance.gov/" target="_blank" rel="noopener noreferrer">Visit FEMA Assistance</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">FEMA Virginia Disaster Information</div>
+          <div class="insuranceNote">Check Virginia disaster declarations and designated recovery areas.</div>
+          <a class="insuranceLink" href="https://www.fema.gov/disaster/4291/designated-areas" target="_blank" rel="noopener noreferrer">View Virginia FEMA Info</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">American Red Cross Virginia Region</div>
+          <div class="insuranceNote">Find Red Cross shelter, disaster relief, and recovery support across Virginia.</div>
+          <a class="insuranceLink" href="https://www.redcross.org/local/virginia/about-us.html" target="_blank" rel="noopener noreferrer">Visit Red Cross Virginia</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">Virginia Emergency Management</div>
+          <div class="insuranceNote">Official state emergency management guidance, alerts, and preparedness resources.</div>
+          <a class="insuranceLink" href="https://www.vaemergency.gov" target="_blank" rel="noopener noreferrer">Visit VDEM</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">Dominion Energy Outage Center</div>
+          <div class="insuranceNote">Track outages and restoration status for power interruptions in Hampton Roads.</div>
+          <a class="insuranceLink" href="https://www.dominionenergy.com/outagecenter" target="_blank" rel="noopener noreferrer">Check Power Outages</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">511 Virginia</div>
+          <div class="insuranceNote">View road conditions, closures, and travel impacts during severe weather.</div>
+          <a class="insuranceLink" href="https://www.511virginia.org/" target="_blank" rel="noopener noreferrer">View 511 Virginia</a>
+        </div>
+        <div class="insuranceCard">
+          <div class="insuranceName">Virginia Know Your Zone</div>
+          <div class="insuranceNote">Check coastal evacuation zones and hurricane evacuation guidance.</div>
+          <a class="insuranceLink" href="https://www.knowyourzoneva.org/" target="_blank" rel="noopener noreferrer">Check Evacuation Zone</a>
         </div>
       </div>
     </section>
@@ -1044,6 +1098,7 @@
       </div>
     </aside>
   </div>
+
 </main>
 
 <!-- LOOKUP: FRONTEND-LOGIN-MODAL
