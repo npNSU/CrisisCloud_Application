@@ -1828,6 +1828,7 @@
   let rptLat = null;
   let rptLng = null;
   let rptGeoTimer = null;
+  let reportMarkerById = {};
   const rptTLabels = {flood:"Flooding",surge:"Storm surge",wind:"Wind damage",power:"Power outage",road:"Road closed",other:"Report"};
   const rptTCls = {flood:"ft-flood",surge:"ft-surge",wind:"ft-wind",power:"ft-power",road:"ft-road",other:"ft-flood"};
   const reportPinLayer = L.layerGroup().addTo(map);
@@ -1846,6 +1847,19 @@
     return h + ":" + String(m).padStart(2,"0") + " " + ap;
   }
 
+  function focusReportOnMap(reportId) {
+    const marker = reportMarkerById[reportId];
+    if (!marker) return;
+
+    const mapTop = mapElement.getBoundingClientRect().top + window.scrollY;
+    const offset = Math.max(40, (window.innerHeight - mapElement.offsetHeight) / 2);
+    window.scrollTo({ top: Math.max(0, mapTop - offset), behavior: "smooth" });
+    map.setView(marker.getLatLng(), 15);
+    window.setTimeout(() => {
+      marker.openPopup();
+    }, 250);
+  }
+
   function renderReportFeed(reports) {
     const feed = document.getElementById("reportFeed");
     const count = document.getElementById("reportCount");
@@ -1856,22 +1870,25 @@
       const label = rptTLabels[r.type] || "Report";
       const time = fmtShortTime(r.submitted_at);
       const loc = r.city + (r.address ? ", " + r.address : "");
-      return "<div style='background:rgba(255,255,255,.04);border:1px solid rgba(96,165,250,.1);border-radius:10px;padding:9px 11px;'>"
+      const clickable = r.lat != null && r.lon != null;
+      return "<button type='button' data-report-id='" + r.id + "' style='width:100%;text-align:left;background:rgba(255,255,255,.04);border:1px solid rgba(96,165,250,.1);border-radius:10px;padding:9px 11px;cursor:" + (clickable ? "pointer" : "default") + ";'>"
         + "<div style='display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;flex-wrap:wrap;gap:4px;'>"
         + "<span style='font-size:10px;font-weight:800;padding:2px 7px;border-radius:999px;' class='" + cls + "'>" + label + "</span>"
         + "<span style='font-size:10px;color:#475569;'>" + time + "</span></div>"
         + "<div style='font-size:12px;color:#cbd5e1;line-height:1.4;'>" + esc(r.description) + "</div>"
         + "<div style='font-size:11px;color:#60a5fa;margin-top:2px;'>" + esc(loc) + (r.reporter_name ? " - " + esc(r.reporter_name) : "") + "</div>"
-        + "</div>";    }).join("");
+        + "</button>";    }).join("");
   }
 
   function renderReportPins(reports) {
     reportPinLayer.clearLayers();
+    reportMarkerById = {};
     reports.forEach(r => {
       if (r.lat && r.lon) {
-        L.marker([r.lat, r.lon], {icon: mkReportIcon()})
+        const marker = L.marker([r.lat, r.lon], {icon: mkReportIcon()})
           .bindPopup("<b>" + (rptTLabels[r.type] || "Report") + "</b><br>" + esc(r.description) + "<br><small>" + r.city + (r.address ? ", " + r.address : "") + "</small>")
           .addTo(reportPinLayer);
+        reportMarkerById[r.id] = marker;
       }
     });
   }
@@ -1886,6 +1903,12 @@
       renderReportPins(reports);
     } catch(e) { console.warn("Report feed unavailable", e); }
   }
+
+  document.getElementById("reportFeed").onclick = (event) => {
+    const button = event.target.closest("[data-report-id]");
+    if (!button) return;
+    focusReportOnMap(button.getAttribute("data-report-id"));
+  };
 
   function useMyLocationReport() {
     if (!navigator.geolocation) { alert("Geolocation not supported by your browser."); return; }
